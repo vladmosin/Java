@@ -25,16 +25,13 @@ public class HashMap {
         initializeArrayOfLists();
     }
 
-    /**
-     * Size of array
-     */
-    private int getArraySize () {
-        return arrayOfLists.length;
-    }
-
     public String put(String key, String value) throws IllegalArgumentException {
         if (key == null) {
             throw new IllegalArgumentException("key is null");
+        }
+
+        if (value == null) {
+            throw new IllegalArgumentException("value is null");
         }
 
         String outdatedValue = arrayOfLists[getIndex(key)].put(key, value);
@@ -58,13 +55,6 @@ public class HashMap {
     }
 
     /**
-     *  Index of array of lists, where element with such key should locate
-     */
-    private int getIndex(String key) {
-        return Math.abs(key.hashCode() % getArraySize());
-    }
-
-    /**
      * Find value in HashMap by Key
      * @param key Key
      * @return if element with such key can not be found, returns null, otherwise returns value
@@ -82,12 +72,34 @@ public class HashMap {
      * @param key Key
      * @return true if element was found and false otherwise
      * */
-    boolean contains(String key) throws IllegalArgumentException {
+    public boolean contains(String key) throws IllegalArgumentException {
         if (key == null) {
             throw new IllegalArgumentException("key is null");
         }
 
         return arrayOfLists[getIndex(key)].contains(key);
+    }
+
+    /**
+     * Deletes all elements from HashMap and decreases size of array of lists to 2
+     */
+    public void clear() {
+        arrayOfLists = new List[2];
+        size = 0;
+        initializeArrayOfLists();
+    }
+
+    /**
+     * Removes element from HashMap
+     * @param key Key
+     * @return value of deleting element or null if element with such key was not found in HashMap
+     */
+    public String remove(String key) throws IllegalArgumentException {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        return arrayOfLists[getIndex(key)].remove(key);
     }
 
     /**
@@ -113,25 +125,17 @@ public class HashMap {
     }
 
     /**
-     * Deletes all elements from HashMap and decreases size of array of lists to 2
+     *  Index of array of lists, where element with such key should locate
      */
-    public void clear() {
-        arrayOfLists = new List[2];
-        size = 0;
-        initializeArrayOfLists();
+    private int getIndex(String key) {
+        return Math.abs(key.hashCode() % getArraySize());
     }
 
     /**
-     * Removes element from HashMap
-     * @param key Key
-     * @return value of deleting element or null if element with such key was not found in HashMap
+     * Size of array
      */
-    public String remove(String key) throws IllegalArgumentException {
-        if (key == null) {
-            throw new IllegalArgumentException("key is null");
-        }
-
-        return arrayOfLists[getIndex(key)].remove(key);
+    private int getArraySize () {
+        return arrayOfLists.length;
     }
 
     private void initializeArrayOfLists() {

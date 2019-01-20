@@ -1,16 +1,21 @@
 package ru.hse.hashtable;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 
 class HashMapTest {
+    private HashMap hashMap;
+
+    @BeforeEach
+    void initHashMap() {
+        hashMap = new HashMap();
+    }
 
     @Test
     void testPut() {
-        HashMap hashMap = new HashMap();
-
         assertNull(hashMap.put("cat", "melon"));
         assertNull(hashMap.put("dog", "cherry"));
         assertEquals(2, hashMap.size());
@@ -21,8 +26,6 @@ class HashMapTest {
 
     @Test
     void testPutInBigHashTable() {
-        HashMap hashMap = new HashMap();
-
         assertNull(hashMap.put("cat", "melon"));
         assertNull(hashMap.put("dog", "cherry"));
         assertNull(hashMap.put("frog", "lime"));
@@ -39,8 +42,6 @@ class HashMapTest {
 
     @Test
     void testGet() {
-        HashMap hashMap = new HashMap();
-
         hashMap.put("cat", "melon");
         hashMap.put("dog", "cherry");
         assertNull(hashMap.get("frog"));
@@ -54,8 +55,6 @@ class HashMapTest {
 
     @Test
     void testContains() {
-        HashMap hashMap = new HashMap();
-
         hashMap.put("cat", "melon");
         hashMap.put("horse", "cherry");
         hashMap.put("frog", "lime");
@@ -75,8 +74,6 @@ class HashMapTest {
 
     @Test
     void testClear() {
-        HashMap hashMap = new HashMap();
-
         hashMap.put("cat", "melon");
         hashMap.clear();
         assertEquals(0, hashMap.size());
@@ -98,8 +95,6 @@ class HashMapTest {
 
     @Test
     void testRemove() {
-        HashMap hashMap = new HashMap();
-
         hashMap.put("cat", "melon");
         hashMap.put("horse", "cherry");
         hashMap.put("frog", "lime");
@@ -121,8 +116,6 @@ class HashMapTest {
 
     @Test
     void testMethodsTogether() {
-        HashMap hashMap = new HashMap();
-
         assertNull(hashMap.put("cat", "melon"));
         assertTrue(hashMap.contains("cat"));
         assertNull(hashMap.get("dog"));

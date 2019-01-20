@@ -17,18 +17,19 @@ public class List {
         private String value;
         private String key;
 
-        public ListElement(ListElement next, String key, String value) {
+        public ListElement(ListElement next, String key, String value) throws IllegalArgumentException {
+            if (key == null) {
+                throw new IllegalArgumentException("key is null");
+            }
+
+            if (value == null) {
+                throw new IllegalArgumentException("value is null");
+            }
+
             this.next = next;
             this.value = value;
             this.key = key;
         }
-    }
-
-    /**
-     * Construct auxiliary element as a head of list
-     */
-    public List() {
-        head = new ListElement(null, "", "");
     }
 
     /**
@@ -42,9 +43,24 @@ public class List {
     private int size;
 
     /**
+     * Construct auxiliary element as a head of list
+     */
+    public List() {
+        head = new ListElement(null, "", "");
+    }
+
+    /**
      * Adds new element with given key and value to the beginning of the list
      */
-    public void push(String key, String value) {
+    public void push(String key, String value) throws IllegalArgumentException {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        if (value == null) {
+            throw new IllegalArgumentException("value is null");
+        }
+
         head.next = new ListElement(head.next, key, value);
         size++;
     }
@@ -52,7 +68,11 @@ public class List {
     /**
      * Deletes first element of list
      * */
-    public void pop() {
+    public void pop() throws IllegalStateException {
+        if (head.next == null) {
+            throw new IllegalStateException("list is empty");
+        }
+
         head.next = head.next.next;
         size--;
     }
@@ -93,6 +113,10 @@ public class List {
             throw new IllegalArgumentException("key is null");
         }
 
+        if (newValue == null) {
+            throw new IllegalArgumentException("value is null");
+        }
+
         ListElement currentElement = findElement(key);
 
         if (currentElement != null) {
@@ -101,42 +125,6 @@ public class List {
             return returnValue;
         } else {
             push(key, newValue);
-            return null;
-        }
-    }
-
-    /**
-     * Finds element which is in list before element with given key
-     * @param key Key
-     * @return element which is before the element with given key, or null if such element was not found
-     * */
-    private ListElement findPrevious(String key) {
-        ListElement currentElement = head.next;
-        ListElement previousElement = head;
-
-        while (currentElement != null) {
-            if (currentElement.key.equals(key)) {
-                return previousElement;
-            } else {
-                previousElement = currentElement;
-                currentElement = currentElement.next;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Finds element with given key
-     * @param key Key
-     * @return element with given key, or null if such element was not found
-     * */
-    private ListElement findElement(String key) {
-        ListElement currentElement = findPrevious(key);
-
-        if (currentElement != null) {
-            return currentElement.next;
-        } else {
             return null;
         }
     }
@@ -221,5 +209,41 @@ public class List {
         }
 
         return keyValueArray;
+    }
+
+    /**
+     * Finds element which is in list before element with given key
+     * @param key Key
+     * @return element which is before the element with given key, or null if such element was not found
+     * */
+    private ListElement findPrevious(String key) {
+        ListElement currentElement = head.next;
+        ListElement previousElement = head;
+
+        while (currentElement != null) {
+            if (currentElement.key.equals(key)) {
+                return previousElement;
+            } else {
+                previousElement = currentElement;
+                currentElement = currentElement.next;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Finds element with given key
+     * @param key Key
+     * @return element with given key, or null if such element was not found
+     * */
+    private ListElement findElement(String key) {
+        ListElement currentElement = findPrevious(key);
+
+        if (currentElement != null) {
+            return currentElement.next;
+        } else {
+            return null;
+        }
     }
 }
