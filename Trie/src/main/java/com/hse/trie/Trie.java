@@ -1,6 +1,5 @@
 package com.hse.trie;
 
-import javax.swing.tree.TreeNode;
 import java.util.HashMap;
 
 public class Trie {
@@ -37,7 +36,7 @@ public class Trie {
             return isEndOfWord;
         }
 
-        public void decrement() {
+        public void decrementNumberOfSuffixes() {
             suffixNumber--;
         }
 
@@ -51,6 +50,10 @@ public class Trie {
 
         public void setIsNotEndOfWord() {
             isEndOfWord = false;
+        }
+
+        public void incrementNumberOfSuffixes() {
+            suffixNumber++;
         }
     }
 
@@ -77,6 +80,8 @@ public class Trie {
                 } else {
                     currentNode.addNext(string.charAt(index), new TrieNode(false));
                 }
+            } else {
+                currentNode.incrementNumberOfSuffixes();
             }
 
             currentNode = currentNode.getNext(string.charAt(index));
@@ -115,7 +120,7 @@ public class Trie {
         TrieNode currentNode = root;
 
         for (int index = 0; index < string.length(); index++) {
-            currentNode.decrement();
+            currentNode.decrementNumberOfSuffixes();
             if (currentNode.getNext(string.charAt(index)).getSuffixNumber() == 1) {
                 currentNode.removeNext(string.charAt(index));
                 return true;
@@ -127,5 +132,25 @@ public class Trie {
         return true;
     }
 
-    
+    public int size() {
+        return root.getSuffixNumber();
+    }
+
+    public int howManyStartsWithPrefix(String prefix) throws IllegalArgumentException {
+        if (prefix == null) {
+            throw new IllegalArgumentException("prefix is null");
+        }
+
+        TrieNode currentNode = root;
+
+        for (int index = 0; index < prefix.length(); index++) {
+            if (!currentNode.containsNext(prefix.charAt(index))) {
+                return 0;
+            }
+
+            currentNode = currentNode.getNext(prefix.charAt(index));
+        }
+
+        return currentNode.getSuffixNumber();
+    }
 }
