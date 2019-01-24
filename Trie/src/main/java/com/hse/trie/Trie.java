@@ -32,6 +32,10 @@ public class Trie {
 
             nextTreeNode.put(symbol, trieNode);
         }
+
+        public boolean isEndOfWord() {
+            return isEndOfWord;
+        }
     }
 
     private TrieNode root;
@@ -59,5 +63,19 @@ public class Trie {
         }
 
         return isNew;
+    }
+
+    public boolean contains(String string) {
+        TrieNode currentNode = root;
+
+        for (int index = 0; index < string.length(); index++) {
+            if (!currentNode.containsNext(string.charAt(index))) {
+                return false;
+            }
+
+            currentNode = currentNode.getNext(string.charAt(index));
+        }
+
+        return currentNode.isEndOfWord();
     }
 }
