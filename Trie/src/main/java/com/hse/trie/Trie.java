@@ -36,6 +36,22 @@ public class Trie {
         public boolean isEndOfWord() {
             return isEndOfWord;
         }
+
+        public void decrement() {
+            suffixNumber--;
+        }
+
+        public int getSuffixNumber() {
+            return suffixNumber;
+        }
+
+        public void removeNext(char symbol) {
+            nextTreeNode.remove(symbol);
+        }
+
+        public void setIsNotEndOfWord() {
+            isEndOfWord = false;
+        }
     }
 
     private TrieNode root;
@@ -45,7 +61,11 @@ public class Trie {
         root = new TrieNode();
     }
 
-    public boolean add(String string) {
+    public boolean add(String string) throws IllegalArgumentException {
+        if (string == null) {
+            throw new IllegalArgumentException("added string is null");
+        }
+
         TrieNode currentNode = root;
         boolean isNew = false;
 
@@ -65,7 +85,11 @@ public class Trie {
         return isNew;
     }
 
-    public boolean contains(String string) {
+    public boolean contains(String string) throws IllegalArgumentException {
+        if (string == null) {
+            throw new IllegalArgumentException("string is null");
+        }
+
         TrieNode currentNode = root;
 
         for (int index = 0; index < string.length(); index++) {
@@ -78,4 +102,30 @@ public class Trie {
 
         return currentNode.isEndOfWord();
     }
+
+    public boolean remove(String string) throws IllegalArgumentException {
+        if (string == null) {
+            throw new IllegalArgumentException("removed string is null");
+        }
+
+        if (!contains(string)) {
+            return false;
+        }
+
+        TrieNode currentNode = root;
+
+        for (int index = 0; index < string.length(); index++) {
+            currentNode.decrement();
+            if (currentNode.getNext(string.charAt(index)).getSuffixNumber() == 1) {
+                currentNode.removeNext(string.charAt(index));
+                return true;
+            }
+            currentNode = currentNode.getNext(string.charAt(index));
+        }
+
+        currentNode.setIsNotEndOfWord();
+        return true;
+    }
+
+    
 }
