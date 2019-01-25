@@ -4,73 +4,12 @@ import java.io.*;
 import java.util.HashMap;
 
 public class Trie {
-    private static class TrieNode {
-        private HashMap<Character, TrieNode> nextTreeNode;
-        private int suffixNumber;
-        private boolean isEndOfWord;
-
-        public TrieNode(boolean isEndOfWord) {
-            this.isEndOfWord = isEndOfWord;
-            suffixNumber = 1;
-        }
-
-        public TrieNode() {
-        }
-
-        public boolean containsNext(char symbol) {
-            return nextTreeNode.containsKey(symbol);
-        }
-
-        public TrieNode getNext(char symbol) {
-            return nextTreeNode.get(symbol);
-        }
-
-        public void addNext(char symbol, TrieNode trieNode) throws IllegalArgumentException {
-            if (trieNode == null) {
-                throw new IllegalArgumentException("Trie node is null");
-            }
-
-            nextTreeNode.put(symbol, trieNode);
-        }
-
-        public boolean isEndOfWord() {
-            return isEndOfWord;
-        }
-
-        public void decrementNumberOfSuffixes() {
-            suffixNumber--;
-        }
-
-        public int getSuffixNumber() {
-            return suffixNumber;
-        }
-
-        public void removeNext(char symbol) {
-            nextTreeNode.remove(symbol);
-        }
-
-        public void setIsNotEndOfWord() {
-            isEndOfWord = false;
-        }
-
-        public void incrementNumberOfSuffixes() {
-            suffixNumber++;
-        }
-
-        public void serialize(DataOutputStream dataOut) {
-
-        }
-
-        public void deserialize(DataOutputStream dataIn) {
-
-        }
-    }
-
-    private TrieNode root;
-    private int size;
+    private HashMap<Character, Trie> nextTries;
+    private int suffixNumber;
+    private boolean isEndOfWord;
 
     public Trie() {
-        root = new TrieNode();
+        nextTries = new HashMap<Character, Trie>();
     }
 
     public boolean add(String string) throws IllegalArgumentException {
@@ -78,25 +17,24 @@ public class Trie {
             throw new IllegalArgumentException("added string is null");
         }
 
-        TrieNode currentNode = root;
-        boolean isNew = false;
+        return addFromPosition(string, 0);
+    }
 
-        for (int index = 0; index < string.length(); index++) {
-            if (!currentNode.containsNext(string.charAt(index))) {
-                isNew = true;
-                if (index == string.length() - 1) {
-                    currentNode.addNext(string.charAt(index), new TrieNode(true));
-                } else {
-                    currentNode.addNext(string.charAt(index), new TrieNode(false));
-                }
-            } else {
-                currentNode.incrementNumberOfSuffixes();
-            }
-
-            currentNode = currentNode.getNext(string.charAt(index));
+    private boolean addFromPosition(String string, int index) {
+        suffixNumber++;
+        if (index == string.length()) {
+            isEndOfWord = true;
+            return true;
         }
 
-        return isNew;
+        char currentSymbol = string.charAt(index);
+        if (nextTries.containsKey(currentSymbol)) {
+            return nextTries.get(currentSymbol).addFromPosition(string, index + 1);
+        } else {
+            Trie nextTrie = nextTries.put(currentSymbol, new Trie());
+            nextTrie.addFromPosition(string, index + 1);
+            return false;
+        }
     }
 
     public boolean contains(String string) throws IllegalArgumentException {
@@ -104,17 +42,17 @@ public class Trie {
             throw new IllegalArgumentException("string is null");
         }
 
-        TrieNode currentNode = root;
+        return containsFromPosition(string, 0);
+    }
 
-        for (int index = 0; index < string.length(); index++) {
-            if (!currentNode.containsNext(string.charAt(index))) {
-                return false;
-            }
-
-            currentNode = currentNode.getNext(string.charAt(index));
+    private boolean containsFromPosition (String string, int index) {
+        if (index == string.length()) {
+            return isEndOfWord;
         }
 
-        return currentNode.isEndOfWord();
+        Trie nextTrie = nextTries.get(string.charAt(index));
+
+        return nextTrie != null && nextTrie.containsFromPosition(string, index + 1);
     }
 
     public boolean remove(String string) throws IllegalArgumentException {
@@ -124,25 +62,32 @@ public class Trie {
 
         if (!contains(string)) {
             return false;
+        } else {
+            removeFromPosition(string, 0);
+            return true;
+        }
+    }
+
+    private void removeFromPosition(String string, int index) {
+        suffixNumber--;
+        if (index == string.length()) {
+            isEndOfWord = false;
+            return;
         }
 
-        TrieNode currentNode = root;
+        char currentSymbol = string.charAt(index);
+        Trie nextTrie = nextTries.get(currentSymbol);
 
-        for (int index = 0; index < string.length(); index++) {
-            currentNode.decrementNumberOfSuffixes();
-            if (currentNode.getNext(string.charAt(index)).getSuffixNumber() == 1) {
-                currentNode.removeNext(string.charAt(index));
-                return true;
-            }
-            currentNode = currentNode.getNext(string.charAt(index));
+        if (nextTrie.suffixNumber == 1) {
+            nextTries.remove(currentSymbol);
+            return;
+        } else {
+            nextTrie.removeFromPosition(string, index + 1);
         }
-
-        currentNode.setIsNotEndOfWord();
-        return true;
     }
 
     public int size() {
-        return root.getSuffixNumber();
+        return suffixNumber;
     }
 
     public int howManyStartsWithPrefix(String prefix) throws IllegalArgumentException {
@@ -150,28 +95,37 @@ public class Trie {
             throw new IllegalArgumentException("prefix is null");
         }
 
-        TrieNode currentNode = root;
+        Trie trieDownPrefix = goDownPrefixFromPosition(prefix, 0);
 
-        for (int index = 0; index < prefix.length(); index++) {
-            if (!currentNode.containsNext(prefix.charAt(index))) {
-                return 0;
-            }
+        if (trieDownPrefix == null) {
+            return 0;
+        } else {
+            return trieDownPrefix.suffixNumber;
+        }
+    }
 
-            currentNode = currentNode.getNext(prefix.charAt(index));
+    private Trie goDownPrefixFromPosition(String prefix, int index) {
+        if (index == prefix.length()) {
+            return this;
         }
 
-        return currentNode.getSuffixNumber();
+        char currentSymbol = prefix.charAt(index);
+        Trie nextNode = nextTries.get(currentSymbol);
+
+        if (nextNode == null) {
+            return null;
+        } else {
+            return nextNode.goDownPrefixFromPosition(prefix, index++);
+        }
     }
 
     public void serialize(OutputStream out) throws IOException {
         try (var dataOut = new DataOutputStream(out)) {
-            root.serialize(dataOut);
         }
     }
 
     public void deserialize(InputStream in) throws IOException {
         try (var dataIn = new DataInputStream(in)) {
-            root.deserialize(dataIn);
         }
     }
 }
