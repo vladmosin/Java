@@ -31,8 +31,8 @@ public class Trie {
         if (nextTries.containsKey(currentSymbol)) {
             return nextTries.get(currentSymbol).addFromPosition(string, index + 1);
         } else {
-            Trie nextTrie = nextTries.put(currentSymbol, new Trie());
-            nextTrie.addFromPosition(string, index + 1);
+            nextTries.put(currentSymbol, new Trie());
+            nextTries.get(currentSymbol).addFromPosition(string, index + 1);
             return false;
         }
     }
@@ -80,7 +80,6 @@ public class Trie {
 
         if (nextTrie.suffixNumber == 1) {
             nextTries.remove(currentSymbol);
-            return;
         } else {
             nextTrie.removeFromPosition(string, index + 1);
         }
@@ -115,17 +114,46 @@ public class Trie {
         if (nextNode == null) {
             return null;
         } else {
-            return nextNode.goDownPrefixFromPosition(prefix, index++);
+            return nextNode.goDownPrefixFromPosition(prefix, index + 1);
         }
     }
 
     public void serialize(OutputStream out) throws IOException {
         try (var dataOut = new DataOutputStream(out)) {
+            dataOut.writeBoolean(isEndOfWord);
+            dataOut.writeInt(suffixNumber);
+            for (char symbol : nextTries.keySet()) {
+                dataOut.writeChar(symbol);
+                nextTries.get(symbol).serialize(out);
+            }
         }
     }
 
+    private void clear() {
+        nextTries.clear();
+        isEndOfWord = false;
+        suffixNumber = 0;
+    }
+
     public void deserialize(InputStream in) throws IOException {
+        clear();
         try (var dataIn = new DataInputStream(in)) {
+            int childrenNumber = dataIn.readInt();
+            isEndOfWord = dataIn.readBoolean();
+
+            if (isEndOfWord) {
+                suffixNumber = 1;
+            }
+
+            for (int index = 0; index < childrenNumber; index++) {
+                char newSymbol = dataIn.readChar();
+
+                var newTrie = new Trie();
+
+                newTrie.deserialize(in);
+                suffixNumber += newTrie.suffixNumber;
+                nextTries.put(newSymbol, newTrie);
+            }
         }
     }
 }
