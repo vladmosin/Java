@@ -3,7 +3,7 @@ package com.hse.trie;
 import java.io.*;
 import java.util.HashMap;
 
-public class Trie {
+public class Trie implements Serializable {
     private HashMap<Character, Trie> nextTries;
     private int suffixNumber;
     private boolean isEndOfWord;
@@ -118,6 +118,7 @@ public class Trie {
         }
     }
 
+    @Override
     public void serialize(OutputStream out) throws IOException {
         try (var dataOut = new DataOutputStream(out)) {
             dataOut.writeBoolean(isEndOfWord);
@@ -135,6 +136,7 @@ public class Trie {
         suffixNumber = 0;
     }
 
+    @Override
     public void deserialize(InputStream in) throws IOException {
         clear();
         try (var dataIn = new DataInputStream(in)) {
