@@ -1,5 +1,6 @@
 package com.hse.trie;
 
+import java.io.*;
 import java.util.HashMap;
 
 public class Trie {
@@ -54,6 +55,14 @@ public class Trie {
 
         public void incrementNumberOfSuffixes() {
             suffixNumber++;
+        }
+
+        public void serialize(DataOutputStream dataOut) {
+
+        }
+
+        public void deserialize(DataOutputStream dataIn) {
+
         }
     }
 
@@ -152,5 +161,17 @@ public class Trie {
         }
 
         return currentNode.getSuffixNumber();
+    }
+
+    public void serialize(OutputStream out) throws IOException {
+        try (var dataOut = new DataOutputStream(out)) {
+            root.serialize(dataOut);
+        }
+    }
+
+    public void deserialize(InputStream in) throws IOException {
+        try (var dataIn = new DataInputStream(in)) {
+            root.deserialize(dataIn);
+        }
     }
 }
