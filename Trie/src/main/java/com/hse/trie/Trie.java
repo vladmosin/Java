@@ -3,15 +3,34 @@ package com.hse.trie;
 import java.io.*;
 import java.util.HashMap;
 
+/**
+ * Implements recursive trie
+ * */
 public class Trie implements Serializable {
+    /**
+     * Stores next tries as values by char as key they are connected with current trie
+     * */
     private HashMap<Character, Trie> nextTries;
+
+    /**
+     * Stores number of strings in trie
+     * */
     private int suffixNumber;
+
+    /**
+     * Stores if there is an element which ends in current tree
+     * */
     private boolean isEndOfWord;
 
     public Trie() {
         nextTries = new HashMap<Character, Trie>();
     }
 
+    /**
+     * Added new element to trie
+     * @param string added element
+     * @return If there was no given string in trie returns true, otherwise returns false
+     * */
     public boolean add(String string) throws IllegalArgumentException {
         if (string == null) {
             throw new IllegalArgumentException("added string is null");
@@ -25,6 +44,9 @@ public class Trie implements Serializable {
         }
     }
 
+    /**
+     * Adds to trie suffix of string starts from index
+     * */
     private void addFromPosition(String string, int index) {
         suffixNumber++;
         if (index == string.length()) {
@@ -42,6 +64,9 @@ public class Trie implements Serializable {
         }
     }
 
+    /**
+     * Returns true if string contains in trie
+     * */
     public boolean contains(String string) throws IllegalArgumentException {
         if (string == null) {
             throw new IllegalArgumentException("string is null");
@@ -50,6 +75,9 @@ public class Trie implements Serializable {
         return containsFromPosition(string, 0);
     }
 
+    /**
+     * Returns true if suffix of string starts from index contains in trie
+     * */
     private boolean containsFromPosition (String string, int index) {
         if (index == string.length()) {
             return isEndOfWord;
@@ -60,6 +88,10 @@ public class Trie implements Serializable {
         return nextTrie != null && nextTrie.containsFromPosition(string, index + 1);
     }
 
+    /**
+     * Removes string from trie
+     * @return If it was no string in trie returns false, otherwise true
+     * */
     public boolean remove(String string) throws IllegalArgumentException {
         if (string == null) {
             throw new IllegalArgumentException("removed string is null");
@@ -73,6 +105,9 @@ public class Trie implements Serializable {
         }
     }
 
+    /**
+     * Removes suffix of string starts from index from trie
+     * */
     private void removeFromPosition(String string, int index) {
         suffixNumber--;
         if (index == string.length()) {
@@ -90,10 +125,16 @@ public class Trie implements Serializable {
         }
     }
 
+    /**
+     * Returns number of string in trie
+     * */
     public int size() {
         return suffixNumber;
     }
 
+    /**
+     * Returns number of strings in trie start with given prefix
+     * */
     public int howManyStartsWithPrefix(String prefix) throws IllegalArgumentException {
         if (prefix == null) {
             throw new IllegalArgumentException("prefix is null");
@@ -108,6 +149,11 @@ public class Trie implements Serializable {
         }
     }
 
+    /**
+     * Goes down trie
+     * @return If there is no string with such prefix returns null, otherwise returns trie, which is prefix-down
+     * current element
+     * */
     private Trie goDownPrefixFromPosition(String prefix, int index) {
         if (index == prefix.length()) {
             return this;
@@ -123,6 +169,14 @@ public class Trie implements Serializable {
         }
     }
 
+    /**
+     * Converts trie to byte sequence and writes to OutputStream given as argument
+     * Format:
+     * 1. isEndOfWord
+     * 2. number of children
+     * 3. symbol
+     * 4. description of trie which is connected by symbol from 3.
+     */
     @Override
     public void serialize(OutputStream out) throws IOException {
         try (var dataOut = new DataOutputStream(out)) {
@@ -141,6 +195,9 @@ public class Trie implements Serializable {
         suffixNumber = 0;
     }
 
+    /**
+     * Replace old tree with new trie given in InputStream
+     * */
     @Override
     public void deserialize(InputStream in) throws IOException {
         clear();
