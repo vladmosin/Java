@@ -29,6 +29,7 @@ public class Trie implements Serializable {
         suffixNumber++;
         if (index == string.length()) {
             isEndOfWord = true;
+            return;
         }
 
         char currentSymbol = string.charAt(index);
@@ -126,7 +127,7 @@ public class Trie implements Serializable {
     public void serialize(OutputStream out) throws IOException {
         try (var dataOut = new DataOutputStream(out)) {
             dataOut.writeBoolean(isEndOfWord);
-            dataOut.writeInt(suffixNumber);
+            dataOut.writeInt(nextTries.size());
             for (char symbol : nextTries.keySet()) {
                 dataOut.writeChar(symbol);
                 nextTries.get(symbol).serialize(out);
@@ -144,8 +145,8 @@ public class Trie implements Serializable {
     public void deserialize(InputStream in) throws IOException {
         clear();
         try (var dataIn = new DataInputStream(in)) {
-            int childrenNumber = dataIn.readInt();
             isEndOfWord = dataIn.readBoolean();
+            int childrenNumber = dataIn.readInt();
 
             if (isEndOfWord) {
                 suffixNumber = 1;
