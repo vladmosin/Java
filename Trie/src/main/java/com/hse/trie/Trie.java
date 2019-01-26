@@ -17,23 +17,27 @@ public class Trie implements Serializable {
             throw new IllegalArgumentException("added string is null");
         }
 
-        return addFromPosition(string, 0);
+        if (contains(string)) {
+            return false;
+        } else {
+            addFromPosition(string, 0);
+            return true;
+        }
     }
 
-    private boolean addFromPosition(String string, int index) {
+    private void addFromPosition(String string, int index) {
         suffixNumber++;
         if (index == string.length()) {
             isEndOfWord = true;
-            return true;
         }
 
         char currentSymbol = string.charAt(index);
+
         if (nextTries.containsKey(currentSymbol)) {
-            return nextTries.get(currentSymbol).addFromPosition(string, index + 1);
+            nextTries.get(currentSymbol).addFromPosition(string, index + 1);
         } else {
             nextTries.put(currentSymbol, new Trie());
             nextTries.get(currentSymbol).addFromPosition(string, index + 1);
-            return false;
         }
     }
 
