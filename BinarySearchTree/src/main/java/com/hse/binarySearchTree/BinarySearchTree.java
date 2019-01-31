@@ -14,11 +14,89 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
         private Node<E> right;
         private Node<E> parent;
 
-        private Node(E value, Node<E> left, Node<E> right, Node<E> parent) {
+        private Node() {}
+
+        private Node(@NotNull E value, Node<E> left, Node<E> right, Node<E> parent) {
             this.value = value;
             this.left = left;
             this.right = right;
             this.parent = parent;
+        }
+
+        private Node<E> findPrevious() {
+            if (left != null) {
+                return left.goLeft();
+            } else {
+                Node<E> firstSmallerParent = goUpRight();
+
+                if ((firstSmallerParent == null) || (firstSmallerParent.left == null)) {
+                    return null;
+                } else {
+                    return firstSmallerParent.left.goRight();
+                }
+            }
+        }
+
+        private Node<E> findNext() {
+            if (right != null) {
+                return right.goLeft();
+            } else {
+                Node<E> firstBiggerParent = goUpLeft();
+
+                if ((firstBiggerParent == null) || (firstBiggerParent.right == null)) {
+                    return null;
+                } else {
+                    return firstBiggerParent.right.goLeft();
+                }
+            }
+        }
+
+        private Node<E> goUpLeft() {
+            if (hasNoParent()) {
+                return null;
+            }
+
+            if (parent.right == this) {
+                return parent.goUpLeft();
+            } else {
+                return parent;
+            }
+        }
+
+        private Node<E> goUpRight() {
+            if (hasNoParent()) {
+                return null;
+            }
+
+            if (parent.left == this) {
+                return parent.goUpRight();
+            } else {
+                return parent;
+            }
+        }
+
+        private boolean hasNoParent() {
+            return parent == null || parent.isRoot();
+        }
+
+        private boolean isRoot() {
+            return value == null;
+        }
+
+        @NotNull private Node<E> goLeft() {
+            if (left == null) {
+                return this;
+            } else {
+                return left.goLeft();
+            }
+        }
+
+        @NotNull private Node<E> goRight() {
+            if (right == null) {
+                return this;
+            } else {
+                return right.goRight();
+            }
         }
     }
 
