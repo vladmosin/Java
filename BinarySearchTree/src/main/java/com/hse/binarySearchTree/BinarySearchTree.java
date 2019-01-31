@@ -21,6 +21,7 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
             this.left = left;
             this.right = right;
             this.parent = parent;
+            size = 0;
         }
 
         private Node<E> findPrevious() {
@@ -171,16 +172,38 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
     }
 
     private boolean isReversed;
+    private Node<E> root;
     private Comparator<? super E> comparator;
 
-    @Override
-    public Iterator descendingIterator() {
-        return null;
+    public BinarySearchTree(Comparator<? super E> comparator) {
+        this.comparator = comparator;
+        root = new Node<>();
+        isReversed = false;
+    }
+
+    public BinarySearchTree() {
+        comparator = new Comparator<E>() {
+            @Override
+            public int compare(E o1, E o2) {
+                return o1.compareTo(o2);
+            }
+        };
+        root = new Node<>();
     }
 
     @Override
-    public MyTreeSet descendingSet() {
-        return null;
+    @NotNull public BinarySearchTreeIterator iterator() {
+        return new BinarySearchTreeIterator(root, isReversed);
+    }
+
+    @Override
+    @NotNull public Iterator descendingIterator() {
+        return new BinarySearchTreeIterator(root, !isReversed);
+    }
+
+    @Override
+    public BinarySearchTree descendingSet() {
+        return new BinarySearchTree();
     }
 
     @Override
@@ -210,11 +233,6 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
 
     @Override
     public E higher(Object o) {
-        return null;
-    }
-
-    @Override
-    public Iterator iterator() {
         return null;
     }
 
