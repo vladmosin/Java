@@ -3,6 +3,7 @@ package com.hse.binarySearchTree;
 import org.junit.jupiter.api.Test;
 
 import java.util.Comparator;
+import java.util.ConcurrentModificationException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -155,21 +156,88 @@ class BinarySearchTreeTest {
 
     @Test
     void testFloorCeiling() {
+        var bst = new BinarySearchTree<Integer>();
+
+        assertNull(bst.floor(0));
+        assertNull(bst.ceiling(90));
+
+        bst.add(1000);
+        bst.add(321);
+        bst.add(-445);
+        bst.add(68);
+
+        assertEquals(Integer.valueOf(1000), bst.floor(20000));
+        assertEquals(Integer.valueOf(1000), bst.floor(1000));
+        assertEquals(Integer.valueOf(321), bst.higher(151));
+        assertNull(bst.higher(10000));
     }
 
     @Test
-    void isEmpty() {
-    }
+    void testIterator() {
+        var bst = new BinarySearchTree<String>();
 
-    @Test
-    void iterator() {
+        bst.add("abcd");
+        bst.add("klmn");
+        bst.add("efgh");
+
+        var bstIterator = bst.iterator();
+        assertTrue(bstIterator.hasNext());
+        assertFalse(bstIterator.hasPrevious());
+        assertEquals("abcd", bstIterator.next());
+        assertEquals("efgh", bstIterator.next());
+        assertEquals("klmn", bstIterator.next());
+        assertEquals("klmn", bstIterator.previous());
     }
 
     @Test
     void descendingIterator() {
+        var bst = new BinarySearchTree<String>();
+
+        bst.add("abcd");
+        bst.add("klmn");
+        bst.add("efgh");
+
+        var bstIterator = bst.descendingIterator();
+        assertTrue(bstIterator.hasNext());
+        assertFalse(bstIterator.hasPrevious());
+        assertEquals("klmn", bstIterator.next());
+        assertEquals("efgh", bstIterator.next());
+        assertEquals("abcd", bstIterator.next());
+        assertEquals("abcd", bstIterator.previous());
     }
 
     @Test
     void descendingSet() {
+        var bst = new BinarySearchTree<Integer>();
+
+        bst.add(7);
+        bst.add(-90);
+        bst.add(34);
+        bst.add(67);
+
+        var descendingBST = bst.descendingSet();
+        var descendingIterator = bst.descendingIterator();
+        var descendingBSTIterator = descendingBST.iterator();
+
+        assertEquals(descendingIterator.next(), descendingBSTIterator.next());
+        assertEquals(descendingIterator.next(), descendingBSTIterator.next());
+        assertEquals(descendingIterator.next(), descendingBSTIterator.next());
+        assertEquals(descendingIterator.next(), descendingBSTIterator.next());
+    }
+
+    @Test
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    void testIteratorInvalidation() {
+        var bst = new BinarySearchTree<String>();
+        var iterator = bst.iterator();
+
+        bst.add("something");
+        assertThrows(ConcurrentModificationException.class, iterator::hasNext);
+
+        var descendingIterator = bst.descendingIterator();
+        bst.remove("something");
+
+        assertThrows(ConcurrentModificationException.class, iterator::hasNext);
+        assertThrows(ConcurrentModificationException.class, descendingIterator::hasNext);
     }
 }
