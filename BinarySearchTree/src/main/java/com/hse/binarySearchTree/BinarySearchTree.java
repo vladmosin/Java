@@ -8,14 +8,26 @@ import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 
+/**
+ * Implements not balanced BST with auxiliary root
+ * */
 public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractSet<E> implements MyTreeSet<E> {
+    /**
+     * Implements node for BST
+     * */
     private static class Node<E> {
+        /**
+         * Size of subtree
+         * */
         private int size;
         private E value;
         private Node<E> left;
         private Node<E> right;
         private Node<E> parent;
 
+        /**
+         * Constructor especially for auxiliary element, which is root of tree
+         * */
         private Node() {}
 
         private Node(@NotNull E value) {
@@ -23,6 +35,9 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
             size++;
         }
 
+        /**
+         * Finds Node with element which is previous for this Node's value in sorted order.
+         * */
         @Nullable private Node<E> findPrevious() {
             if (left != null) {
                 return left.goLeft();
@@ -31,6 +46,9 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
             }
         }
 
+        /**
+         * Finds Node with element which is next for this Node's value in sorted order.
+         * */
         @Nullable
         private Node<E> findNext() {
             if (right != null) {
@@ -40,6 +58,9 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
             }
         }
 
+        /**
+         * Returns first ancestor which is greater than current element.
+         * */
         @Nullable
         private Node<E> goUpLeft() {
             if (hasNoParent()) {
@@ -53,6 +74,9 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
             }
         }
 
+        /**
+         * Returns first ancestor which is less than current element.
+         * */
         @Nullable
         private Node<E> goUpRight() {
             if (hasNoParent()) {
@@ -66,14 +90,23 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
             }
         }
 
+        /**
+         * Checks if node has a parent, which stores value.
+         * */
         private boolean hasNoParent() {
             return parent == null || parent.isRoot();
         }
 
+        /**
+         * Checks, if element is auxiliary
+         * */
         private boolean isRoot() {
             return value == null;
         }
 
+        /**
+         * Returns the most left descendant
+         * */
         @NotNull private Node<E> goLeft() {
             if (left == null) {
                 return this;
@@ -82,6 +115,9 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
             }
         }
 
+        /**
+         * Returns the most right descendant
+         * */
         @NotNull private Node<E> goRight() {
             if (right == null) {
                 return this;
@@ -90,6 +126,12 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
             }
         }
 
+        /**
+         * Finds node, which stores given element as value
+         * @param element Element to find in BST
+         * @param comparator Compares elements in BST
+         * @return Node, which stores element, or null if node with such element was not found
+         * */
         private Node<E> find(@NotNull E element, @NotNull Comparator<? super E> comparator) {
             if (isRoot()) {
                 if (left == null) {
@@ -110,10 +152,20 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
             }
         }
 
+        /**
+         * Checks, if there is a node, which stores given element
+         * @param element Element to find in BST
+         * @param comparator Compares elements in BST
+         * */
         private boolean contains(@NotNull E element, @NotNull Comparator<? super E> comparator) {
             return find(element, comparator) != null;
         }
 
+        /**
+         * Finds node, which stores the biggest value among nodes, which store value smaller than element
+         * @param comparator Compares elements in BST
+         * @return Node, which stores described element, or null if such node was not found
+         * */
         private Node<E> findLower(@NotNull E element, @NotNull Comparator<? super E> comparator) {
             if (isRoot()) {
                 if (left == null) {
@@ -135,6 +187,11 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
             }
         }
 
+        /**
+         * Finds node, which stores the smallest value among nodes, which store value greater than element
+         * @param comparator Compares elements in BST
+         * @return Node, which stores described element, or null if such node was not found
+         * */
         @Nullable
         private Node<E> findHigher(@NotNull E element, @NotNull Comparator<? super E> comparator) {
             Node<E> node = find(element, comparator);
@@ -150,6 +207,9 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
             }
         }
 
+        /**
+         * Change size of parents on additional. Additional should be 1 or -1.
+         * */
         private void changeParentsSizes(int additional) {
             size += additional;
             if (parent != null) {
@@ -159,9 +219,15 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
     }
 
 
+    /**
+     * Implements iterator for BST
+     * */
     public class BinarySearchTreeIterator implements Iterator<E> {
         @NotNull Node<E> node;
         private boolean isReversed;
+        /**
+         * Version of tree for which this iterator is valid
+         * */
         private int version;
 
         public BinarySearchTreeIterator(@NotNull Node<E> node, boolean isReversed) {
