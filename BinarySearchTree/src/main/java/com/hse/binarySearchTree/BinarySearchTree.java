@@ -1,9 +1,11 @@
 package com.hse.binarySearchTree;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.AbstractSet;
 import java.util.Comparator;
+import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 
 public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractSet<E> implements MyTreeSet<E> {
@@ -16,12 +18,9 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
 
         private Node() {}
 
-        private Node(@NotNull E value, @NotNull Node<E> parent, Node<E> left, Node<E> right) {
+        private Node(@NotNull E value) {
             this.value = value;
-            this.left = left;
-            this.right = right;
-            this.parent = parent;
-            size = 0;
+            size++;
         }
 
         private Node<E> findPrevious() {
@@ -38,6 +37,7 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
             }
         }
 
+        @Nullable
         private Node<E> findNext() {
             if (right != null) {
                 return right.goLeft();
@@ -52,6 +52,7 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
             }
         }
 
+        @Nullable
         private Node<E> goUpLeft() {
             if (hasNoParent()) {
                 return null;
@@ -64,6 +65,7 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
             }
         }
 
+        @Nullable
         private Node<E> goUpRight() {
             if (hasNoParent()) {
                 return null;
@@ -120,6 +122,10 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
             }
         }
 
+        private boolean contains(@NotNull E element, @NotNull Comparator<? super E> comparator) {
+            return find(element, comparator) != null;
+        }
+
         private Node<E> findLower(@NotNull E element, @NotNull Comparator<? super E> comparator) {
             if (isRoot()) {
                 if (left == null) {
@@ -141,38 +147,46 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
             }
         }
 
+        @Nullable
         private Node<E> findHigher(@NotNull E element, @NotNull Comparator<? super E> comparator) {
-            if (isRoot()) {
-                if (left == null) {
-                    return null;
-                } else {
-                    return left.findHigher(element, comparator);
-                }
+            Node<E> node = find(element, comparator);
+
+            if (node == null) {
+                node = findLower(element, comparator);
             }
 
-            int resultOfComparison = comparator.compare(element, value);
-
-            if (resultOfComparison <= 0) {
-                return right == null ? null : right.findHigher(element, comparator);
-            } else if (left == null) {
-                return this;
+            if (node != null) {
+                return node.findNext();
             } else {
-                Node<E> node = left.findHigher(element, comparator);
-                return node == null ? this : node;
+                return goLeft();
+            }
+        }
+
+        private void changeParentsSizes(int additional) {
+            size += additional;
+            if (parent != null) {
+                parent.changeParentsSizes(additional);
             }
         }
     }
 
+
     public class BinarySearchTreeIterator implements Iterator<E> {
         Node<E> node;
         private boolean isReversed;
+        private int version;
 
         public BinarySearchTreeIterator(@NotNull Node<E> node, boolean isReversed) {
             this.node = node;
             this.isReversed = isReversed;
+            version = BinarySearchTree.this.version;
         }
 
         public boolean hasPrevious() {
+            if (isInvalid()) {
+                throw new ConcurrentModificationException("tree was modified");
+            }
+
             if (isReversed) {
                 return findNext() != null;
             }
@@ -185,7 +199,7 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
                 throw new IllegalArgumentException("no previous element");
             }
 
-            E element = null;
+            E element;
 
             if (isReversed) {
                 node = findNext();
@@ -199,6 +213,10 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
         }
 
         public boolean hasNext() {
+            if (isInvalid()) {
+                throw new ConcurrentModificationException("tree was modified");
+            }
+
             if (isReversed) {
                 return findPrevious() != null;
             }
@@ -211,7 +229,7 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
                 throw new IllegalArgumentException("no next element");
             }
 
-            E element = null;
+            E element;
 
             if (isReversed) {
                 element = node.value;
@@ -225,17 +243,30 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
         }
 
         private Node<E> findNext() {
+            if (isInvalid()) {
+                throw new ConcurrentModificationException("tree was modified");
+            }
+
             return node.findNext();
         }
 
         private Node<E> findPrevious() {
+            if (isInvalid()) {
+                throw new ConcurrentModificationException("tree was modified");
+            }
+
             return node.findPrevious();
+        }
+
+        private boolean isInvalid() {
+            return version == BinarySearchTree.this.version;
         }
     }
 
     private boolean isReversed;
     private Node<E> root;
     private Comparator<? super E> comparator;
+    private int version = 0;
 
     public BinarySearchTree(Comparator<? super E> comparator) {
         this.comparator = comparator;
@@ -244,7 +275,7 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
     }
 
     public BinarySearchTree() {
-        comparator = (Comparator<E>) (o1, o2) -> o1.compareTo(o2);
+        comparator = Comparator.naturalOrder();
         root = new Node<>();
     }
 
@@ -293,7 +324,7 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
     }
 
     @Override
-    public E last() {
+    @NotNull public E last() {
         if (root.size == 0) {
             throw new IllegalArgumentException("No elements in BST");
         }
@@ -306,24 +337,128 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
     }
 
     @Override
-    public E lower(E element) {
-        return null;
+    @Nullable public E lower(@NotNull E element) {
+        Node<E> node = root.findLower(element, comparator);
+
+        if (node == null) {
+            return null;
+        } else {
+            return node.value;
+        }
     }
 
-    public E floor(E element) {
-        return null;
+    @Override
+    @Nullable public E floor(@NotNull E element) {
+        Node<E> node = root.find(element, comparator);
+
+        if (node == null) {
+            return lower(element);
+        } else {
+            return node.value;
+        }
     }
 
-    public E ceiling(E element) {
-        return null;
+    @Override
+    @Nullable public E ceiling(@NotNull E element) {
+        Node<E> node = root.find(element, comparator);
+
+        if (node == null) {
+            return higher(element);
+        } else {
+            return node.value;
+        }
     }
 
-    public E higher(E element) {
-        return null;
+    @Override
+    @Nullable public E higher(@NotNull E element) {
+        Node<E> node = root.findHigher(element, comparator);
+
+        if (node == null) {
+            return null;
+        } else {
+            return node.value;
+        }
     }
 
     @Override
     public int size() {
         return root.size;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return root.size == 0;
+    }
+
+    @Override
+    public boolean add(@NotNull E element) {
+        if (contains(element)) {
+            return false;
+        }
+
+        Node<E> futureParent = root.findLower(element, comparator);
+        Node<E> newNode = new Node<>(element);
+
+        if (futureParent == null) {
+            if (isEmpty()) {
+                futureParent = root;
+                root.left = newNode;
+                root.right = newNode;
+            } else {
+                futureParent = root.goLeft();
+                futureParent.left = newNode;
+            }
+        } else {
+            if (futureParent.right == null) {
+                futureParent.right = newNode;
+            } else {
+                futureParent = futureParent.right.goLeft();
+                futureParent.left = newNode;
+            }
+        }
+
+        newNode.parent = futureParent;
+        newNode.changeParentsSizes(1);
+        version++;
+        return true;
+    }
+
+    public boolean contains(@NotNull E element) {
+        return root.contains(element, comparator);
+    }
+
+    @SuppressWarnings("ConstantConditions") // NullPointerException is impossible here
+    public boolean remove(@NotNull E element) {
+        if (!contains(element)) {
+            return false;
+        }
+
+        Node<E> node = root.find(element, comparator);
+        Node<E> removingNode = node;
+
+        // If node has two children, then node with next value has 0 or 1
+        if (node.right != null && node.left != null) {
+            Node<E> nextNode = node.findNext();
+
+            node.value = nextNode.value;
+            removingNode = nextNode;
+        }
+
+        removeSingleChildrenNode(removingNode);
+        return true;
+    }
+
+    private void removeSingleChildrenNode(@NotNull Node<E> node) {
+        Node<E> son = node.left == null ? node.right : node.left;
+
+        if (node.parent.left == node) {
+            node.parent.left = son;
+        }
+
+        if (node.parent.right == node) {
+            node.parent.right = son;
+        }
+
+        node.parent.changeParentsSizes(-1);
     }
 }
