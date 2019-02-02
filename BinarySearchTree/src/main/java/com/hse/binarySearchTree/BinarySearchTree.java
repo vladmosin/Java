@@ -44,8 +44,10 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
             } else {
                 Node<E> firstBiggerParent = goUpLeft();
 
-                if ((firstBiggerParent == null) || (firstBiggerParent.right == null)) {
+                if ((firstBiggerParent == null)) {
                     return null;
+                } else if (firstBiggerParent.right == null) {
+                    return firstBiggerParent;
                 } else {
                     return firstBiggerParent.right.goLeft();
                 }
@@ -282,16 +284,8 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
     private BinarySearchTree(BinarySearchTree<E> tree, boolean isReversed) {
         this.root = tree.root;
         this.isReversed = isReversed;
-        this.comparator = tree.comparator;
-    }
-
-    public E find(E element) {
-        Node<E> node = root.find(element, comparator);
-
-        if (node == null) {
-            return null;
-        } else {
-            return node.value;
+        if (isReversed) {
+            this.comparator = (Comparator<E>) (o1, o2) -> -tree.comparator.compare(o1, o2);
         }
     }
 
@@ -418,7 +412,7 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
         }
 
         newNode.parent = futureParent;
-        newNode.changeParentsSizes(1);
+        futureParent.changeParentsSizes(1);
         version++;
         return true;
     }
@@ -460,5 +454,12 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
         }
 
         node.parent.changeParentsSizes(-1);
+    }
+
+    @Override
+    public void clear() {
+        root.size = 0;
+        root.left = null;
+        root.right = null;
     }
 }
