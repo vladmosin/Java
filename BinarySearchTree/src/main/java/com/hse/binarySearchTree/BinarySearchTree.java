@@ -8,19 +8,19 @@ import java.util.*;
 /**
  * Implements not balanced BST with auxiliary root
  * */
-public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractSet<E> implements MyTreeSet<E> {
+public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> {
     /**
      * Implements node for BST
      * */
-    private static class Node<E> {
+    private class Node {
         /**
          * Size of subtree
          * */
         private int size;
         private E value;
-        private Node<E> left;
-        private Node<E> right;
-        private Node<E> parent;
+        private Node left;
+        private Node right;
+        private Node parent;
 
         /**
          * Constructor especially for auxiliary element, which is root of tree
@@ -35,7 +35,7 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
         /**
          * Finds Node with element which is previous for this Node's value in sorted order.
          * */
-        @Nullable private Node<E> findPrevious() {
+        @Nullable private Node findPrevious() {
             if (left != null) {
                 return left.goLeft();
             } else {
@@ -47,7 +47,7 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
          * Finds Node with element which is next for this Node's value in sorted order.
          * */
         @Nullable
-        private Node<E> findNext() {
+        private Node findNext() {
             if (right != null) {
                 return right.goLeft();
             } else {
@@ -59,7 +59,7 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
          * Returns first ancestor which is greater than current element.
          * */
         @Nullable
-        private Node<E> goUpLeft() {
+        private Node goUpLeft() {
             if (hasNoParent()) {
                 return null;
             }
@@ -75,7 +75,7 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
          * Returns first ancestor which is less than current element.
          * */
         @Nullable
-        private Node<E> goUpRight() {
+        private Node goUpRight() {
             if (hasNoParent()) {
                 return null;
             }
@@ -105,7 +105,7 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
          * Returns the most left descendant
          * */
         @NotNull
-        private Node<E> goLeft() {
+        private Node goLeft() {
             if (left == null) {
                 return this;
             } else {
@@ -117,7 +117,7 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
          * Returns the most right descendant
          * */
         @NotNull
-        private Node<E> goRight() {
+        private Node goRight() {
             if (right == null) {
                 return this;
             } else {
@@ -128,77 +128,73 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
         /**
          * Finds node, which stores given element as value
          * @param element Element to find in BST
-         * @param comparator Compares elements in BST
          * @return Node, which stores element, or null if node with such element was not found
          * */
         @Nullable
-        private Node<E> find(@NotNull E element, @NotNull Comparator<? super E> comparator) {
+        private Node find(@NotNull Object element) {
             if (isRoot()) {
                 if (left == null) {
                     return null;
                 } else {
-                    return left.find(element, comparator);
+                    return left.find(element);
                 }
             }
 
-            int resultOfComparison = comparator.compare(element, value);
+            int resultOfComparison = compareElement(element, value);
 
             if (resultOfComparison == 0) {
                 return this;
             } else if (resultOfComparison > 0){
-                return right == null ? null : right.find(element, comparator);
+                return right == null ? null : right.find(element);
             } else {
-                return left == null ? null : left.find(element, comparator);
+                return left == null ? null : left.find(element);
             }
         }
 
         /**
          * Checks, if there is a node, which stores given element
          * @param element Element to find in BST
-         * @param comparator Compares elements in BST
          * */
-        private boolean contains(@NotNull E element, @NotNull Comparator<? super E> comparator) {
-            return find(element, comparator) != null;
+        private boolean contains(@NotNull Object element) {
+            return find(element) != null;
         }
 
         /**
          * Finds node, which stores the biggest value among nodes, which store value smaller than element
-         * @param comparator Compares elements in BST
          * @return Node, which stores described element, or null if such node was not found
          * */
         @Nullable
-        private Node<E> findLower(@NotNull E element, @NotNull Comparator<? super E> comparator) {
+        private Node findLower(@NotNull Object element) {
             if (isRoot()) {
                 if (left == null) {
                     return null;
                 } else {
-                    return left.findLower(element, comparator);
+                    return left.findLower(element);
                 }
             }
 
-            int resultOfComparison = comparator.compare(element, value);
+            int resultOfComparison = compareElement(element, value);
 
             if (resultOfComparison <= 0) {
-                return left == null ? null : left.findLower(element, comparator);
+                return left == null ? null : left.findLower(element);
             } else if (right == null) {
                 return this;
             } else {
-                Node<E> node = right.findLower(element, comparator);
+                Node node = right.findLower(element);
                 return node == null ? this : node;
             }
         }
 
         /**
          * Finds node, which stores the smallest value among nodes, which store value greater than element
-         * @param comparator Compares elements in BST
          * @return Node, which stores described element, or null if such node was not found
          * */
         @Nullable
-        private Node<E> findHigher(@NotNull E element, @NotNull Comparator<? super E> comparator) {
-            Node<E> node = find(element, comparator);
+        private Node findHigher(@NotNull Object element) {
+            Node node = find(element);
 
             if (node == null) {
-                node = findLower(element, comparator);
+                node = findLower(element);
             }
 
             if (node != null) {
@@ -224,7 +220,7 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
      * Implements iterator for BST
      * */
     public class BinarySearchTreeIterator implements Iterator<E> {
-        @NotNull Node<E> node;
+        @NotNull Node node;
         private boolean isReversed;
         /**
          * Version of tree for which this iterator is valid
@@ -234,7 +230,7 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
         /**
          * Special constructor for descending set
          * */
-        public BinarySearchTreeIterator(@NotNull Node<E> node, boolean isReversed) {
+        public BinarySearchTreeIterator(@NotNull Node node, boolean isReversed) {
             this.node = node;
             this.isReversed = isReversed;
             version = BinarySearchTree.this.version;
@@ -327,7 +323,7 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
          * Finds next element
          * */
         @Nullable
-        private Node<E> findNext() {
+        private Node findNext() {
             if (isInvalid()) {
                 throw new ConcurrentModificationException("tree was modified");
             }
@@ -339,7 +335,7 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
          * Finds previous element
          * */
         @Nullable
-        private Node<E> findPrevious() {
+        private Node findPrevious() {
             if (isInvalid()) {
                 throw new ConcurrentModificationException("tree was modified");
             }
@@ -355,7 +351,7 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
         }
     }
 
-    private Node<E> root;
+    private Node root;
     private Comparator<? super E> comparator;
 
     /**
@@ -371,13 +367,21 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
     public BinarySearchTree(@NotNull Comparator<? super E> comparator) {
         this.comparator = comparator;
         isReversed = false;
-        root = new Node<>();
+        root = new Node();
     }
 
     public BinarySearchTree() {
-        comparator = Comparator.naturalOrder();
         isReversed = false;
-        root = new Node<>();
+        root = new Node();
+    }
+
+    @SuppressWarnings("unchecked")
+    private int compareElement(@NotNull Object o1, @NotNull E o2) {
+        if (comparator != null) {
+            return comparator.compare((E) o1, o2);
+        } else {
+            return ((Comparable<? super E>)o1).compareTo(o2);
+        }
     }
 
     /**
@@ -390,19 +394,19 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
         this.comparator = tree.comparator;
     }
 
-    @Override
     /**
      * Returns iterator pointing the first element of BST
      * */
+    @Override
     @NotNull
     public BinarySearchTreeIterator iterator() {
         return new BinarySearchTreeIterator(root, isReversed);
     }
 
-    @Override
     /**
      * Returns reversed iterator pointing the first element of BST
      * */
+    @Override
     @NotNull
     public BinarySearchTreeIterator descendingIterator() {
         return new BinarySearchTreeIterator(root, !isReversed);
@@ -448,7 +452,7 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
     @Override
     @Nullable
     public E lower(@NotNull E element) {
-        Node<E> node = root.findLower(element, comparator);
+        Node node = root.findLower(element);
 
         if (node == null) {
             return null;
@@ -464,7 +468,7 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
     @Override
     @Nullable
     public E floor(@NotNull E element) {
-        Node<E> node = root.find(element, comparator);
+        Node node = root.find(element);
 
         if (node == null) {
             return lower(element);
@@ -480,7 +484,7 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
     @Override
     @Nullable
     public E ceiling(@NotNull E element) {
-        Node<E> node = root.find(element, comparator);
+        Node node = root.find(element);
 
         if (node == null) {
             return higher(element);
@@ -495,7 +499,7 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
     @Override
     @Nullable
     public E higher(@NotNull E element) {
-        Node<E> node = root.findHigher(element, comparator);
+        Node node = root.findHigher(element);
 
         if (node == null) {
             return null;
@@ -524,8 +528,8 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
             return false;
         }
 
-        Node<E> futureParent = root.findLower(element, comparator);
-        Node<E> newNode = new Node<>(element);
+        Node futureParent = root.findLower(element);
+        Node newNode = new Node(element);
 
         if (futureParent == null) {
             if (isEmpty()) {
@@ -551,8 +555,9 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
         return true;
     }
 
-    public boolean contains(@NotNull E element) {
-        return root.contains(element, comparator);
+    @Override
+    public boolean contains(@NotNull Object element) {
+        return root.contains(element);
     }
 
     /**
@@ -560,17 +565,18 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
      * @return If element does not exist in BST returns false, otherwise returns true.
      * */
     @SuppressWarnings("ConstantConditions") // NullPointerException is impossible here
-    public boolean remove(@NotNull E element) {
+    @Override
+    public boolean remove(@NotNull Object element) {
         if (!contains(element)) {
             return false;
         }
 
-        Node<E> node = root.find(element, comparator);
-        Node<E> removingNode = node;
+        Node node = root.find(element);
+        Node removingNode = node;
 
         // If node has two children, then node with next value has 0 or 1
         if (node.right != null && node.left != null) {
-            Node<E> nextNode = node.findNext();
+            Node nextNode = node.findNext();
 
             node.value = nextNode.value;
             removingNode = nextNode;
@@ -585,8 +591,8 @@ public class BinarySearchTree<E extends Comparable<? super E>> extends AbstractS
     /**
      * Removes node which has less than two children
      * */
-    private void removeSingleChildrenNode(@NotNull Node<E> node) {
-        Node<E> son = node.left == null ? node.right : node.left;
+    private void removeSingleChildrenNode(@NotNull Node node) {
+        Node son = node.left == null ? node.right : node.left;
 
         if (node.parent.left == node) {
             node.parent.left = son;

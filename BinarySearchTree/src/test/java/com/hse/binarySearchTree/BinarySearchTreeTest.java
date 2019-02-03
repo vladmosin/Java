@@ -240,4 +240,42 @@ class BinarySearchTreeTest {
         assertThrows(ConcurrentModificationException.class, iterator::hasNext);
         assertThrows(ConcurrentModificationException.class, descendingIterator::hasNext);
     }
+
+    private static class Number {
+        private int value;
+
+        private Number(int value) {
+            this.value = value;
+        }
+    }
+
+    @Test
+    void testWithoutComparator() {
+        var bst = new BinarySearchTree<Number>();
+
+        bst.add(new Number(4));
+        assertThrows(ClassCastException.class, () -> {bst.add(new Number(5));});
+    }
+
+    @Test
+    void testNumberWithComparator() {
+        var comparator = new Comparator<Number>() {
+            @Override
+            public int compare(Number o1, Number o2) {
+                return o1.value - o2.value;
+            }
+        };
+        var bst = new BinarySearchTree<Number>(comparator);
+
+        bst.add(new Number(4));
+        bst.add(new Number(50));
+        bst.add(new Number(7));
+
+        assertTrue(bst.contains(new Number(50)));
+        assertTrue(bst.contains(new Number(7)));
+        assertFalse(bst.contains(new Number(745)));
+
+        assertTrue(bst.remove(new Number(4)));
+        assertFalse(bst.remove(new Number(51)));
+    }
 }
