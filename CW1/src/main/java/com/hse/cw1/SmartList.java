@@ -173,7 +173,7 @@ public class SmartList<E> extends AbstractList<E> implements List<E> {
             }
 
             index++;
-            return get(index);
+            return get(index - 1);
         }
     }
     @Override
