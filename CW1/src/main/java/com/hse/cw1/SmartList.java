@@ -91,7 +91,6 @@ public class SmartList<E> extends AbstractList<E> implements List<E> {
 
     @Override
     public boolean add(E element) {
-        size++;
         if (size == 0) {
             list = element;
         } else if (size == 1) {
@@ -115,6 +114,7 @@ public class SmartList<E> extends AbstractList<E> implements List<E> {
             ((ArrayList)list).add(element);
         }
 
+        size++;
         return true;
     }
 
