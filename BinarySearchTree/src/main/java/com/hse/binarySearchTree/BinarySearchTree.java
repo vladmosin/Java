@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 /**
- * Implements not balanced BST with auxiliary root
+ * Implements not balanced BST
  * */
 public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> {
     /**
@@ -17,15 +17,10 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
          * Size of subtree
          * */
         private int size;
-        private E value;
-        private Node left;
-        private Node right;
-        private Node parent;
-
-        /**
-         * Constructor especially for auxiliary element, which is root of tree
-         * */
-        private Node() {}
+        @NotNull private E value;
+        @Nullable private Node left;
+        @Nullable private Node right;
+        @Nullable private Node parent;
 
         private Node(@NotNull E value) {
             this.value = value;
@@ -60,7 +55,7 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
          * */
         @Nullable
         private Node goUpLeft() {
-            if (hasNoParent()) {
+            if (parent == null) {
                 return null;
             }
 
@@ -76,7 +71,7 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
          * */
         @Nullable
         private Node goUpRight() {
-            if (hasNoParent()) {
+            if (parent == null) {
                 return null;
             }
 
@@ -85,20 +80,6 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
             } else {
                 return parent;
             }
-        }
-
-        /**
-         * Checks if node has a parent, which stores value.
-         * */
-        private boolean hasNoParent() {
-            return parent == null || parent.isRoot();
-        }
-
-        /**
-         * Checks, if element is auxiliary
-         * */
-        private boolean isRoot() {
-            return value == null;
         }
 
         /**
@@ -132,14 +113,6 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
          * */
         @Nullable
         private Node find(@NotNull Object element) {
-            if (isRoot()) {
-                if (left == null) {
-                    return null;
-                } else {
-                    return left.find(element);
-                }
-            }
-
             int resultOfComparison = compareElement(element, value);
 
             if (resultOfComparison == 0) {
@@ -165,14 +138,6 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
          * */
         @Nullable
         private Node findLower(@NotNull Object element) {
-            if (isRoot()) {
-                if (left == null) {
-                    return null;
-                } else {
-                    return left.findLower(element);
-                }
-            }
-
             int resultOfComparison = compareElement(element, value);
 
             if (resultOfComparison <= 0) {
@@ -220,7 +185,7 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
      * Implements iterator for BST
      * */
     public class BinarySearchTreeIterator implements Iterator<E> {
-        @NotNull Node node;
+        @Nullable Node node;
         private boolean isReversed;
         /**
          * Version of tree for which this iterator is valid
@@ -228,10 +193,10 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
         private int version;
 
         /**
-         * Special constructor for descending set
+         * Special constructor for descending set.
          * */
-        public BinarySearchTreeIterator(@NotNull Node node, boolean isReversed) {
-            this.node = node;
+        public BinarySearchTreeIterator(boolean isReversed) {
+            this.node = null;
             this.isReversed = isReversed;
             version = BinarySearchTree.this.version;
         }
@@ -241,7 +206,7 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
                 throw new ConcurrentModificationException("tree was modified");
             }
 
-            if (node.isRoot() && size() != 0) {
+            if (node == null) {
                 return false;
             }
 
@@ -278,7 +243,7 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
                 throw new ConcurrentModificationException("tree was modified");
             }
 
-            if (node.isRoot() && size() != 0) {
+            if (node == null && size != 0) {
                 return true;
             }
 
@@ -299,12 +264,12 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
                 throw new IllegalArgumentException("no next element");
             }
 
-            // if current node is root, then the next element is the smallest or biggest in BST
-            if (node.isRoot()) {
+            // if current node is null, then the next element is the smallest or biggest in BST
+            if (node == null) {
                 if (isReversed) {
-                    node = node.goRight();
+                    node = root.goRight();
                 } else {
-                    node = node.goLeft();
+                    node = root.goLeft();
                 }
 
                 return node.value;
@@ -328,6 +293,14 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
                 throw new ConcurrentModificationException("tree was modified");
             }
 
+            if (node == null) {
+                if (root == null) {
+                    return null;
+                } else {
+                    return root.goLeft();
+                }
+            }
+
             return node.findNext();
         }
 
@@ -338,6 +311,10 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
         private Node findPrevious() {
             if (isInvalid()) {
                 throw new ConcurrentModificationException("tree was modified");
+            }
+
+            if (node == null) {
+                return null;
             }
 
             return node.findPrevious();
@@ -351,8 +328,9 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
         }
     }
 
-    private Node root;
-    private Comparator<? super E> comparator;
+    @Nullable private Node root;
+    @Nullable private Comparator<? super E> comparator;
+    private int size;
 
     /**
      * Version of tree
@@ -367,12 +345,10 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
     public BinarySearchTree(@NotNull Comparator<? super E> comparator) {
         this.comparator = comparator;
         isReversed = false;
-        root = new Node();
     }
 
     public BinarySearchTree() {
         isReversed = false;
-        root = new Node();
     }
 
     @SuppressWarnings("unchecked")
@@ -390,6 +366,7 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
     private BinarySearchTree(@NotNull BinarySearchTree<E> tree) {
         this.root = tree.root;
         version = tree.version;
+        size = tree.size();
         isReversed = !tree.isReversed;
         this.comparator = tree.comparator;
     }
@@ -400,7 +377,7 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
     @Override
     @NotNull
     public BinarySearchTreeIterator iterator() {
-        return new BinarySearchTreeIterator(root, isReversed);
+        return new BinarySearchTreeIterator(isReversed);
     }
 
     /**
@@ -409,7 +386,7 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
     @Override
     @NotNull
     public BinarySearchTreeIterator descendingIterator() {
-        return new BinarySearchTreeIterator(root, !isReversed);
+        return new BinarySearchTreeIterator(!isReversed);
     }
 
     /**
@@ -426,7 +403,7 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
     @Override
     @NotNull
     public E first() {
-        if (root.size == 0) {
+        if (root == null) {
             throw new IllegalArgumentException("No elements in BST");
         }
 
@@ -439,7 +416,7 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
     @Override
     @NotNull
     public E last() {
-        if (root.size == 0) {
+        if (root == null) {
             throw new IllegalArgumentException("No elements in BST");
         }
 
@@ -452,6 +429,10 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
     @Override
     @Nullable
     public E lower(@NotNull E element) {
+        if (root == null) {
+            return null;
+        }
+
         Node node = root.findLower(element);
 
         if (node == null) {
@@ -468,6 +449,10 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
     @Override
     @Nullable
     public E floor(@NotNull E element) {
+        if (root == null) {
+            return null;
+        }
+
         Node node = root.find(element);
 
         if (node == null) {
@@ -484,6 +469,10 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
     @Override
     @Nullable
     public E ceiling(@NotNull E element) {
+        if (root == null) {
+            return null;
+        }
+
         Node node = root.find(element);
 
         if (node == null) {
@@ -499,6 +488,10 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
     @Override
     @Nullable
     public E higher(@NotNull E element) {
+        if (root == null) {
+            return null;
+        }
+
         Node node = root.findHigher(element);
 
         if (node == null) {
@@ -510,12 +503,12 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
 
     @Override
     public int size() {
-        return root.size;
+        return size;
     }
 
     @Override
     public boolean isEmpty() {
-        return root.size == 0;
+        return size == 0;
     }
 
     /**
@@ -528,18 +521,20 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
             return false;
         }
 
+        version++;
+
+        if (root == null) {
+            root = new Node(element);
+            size = 1;
+            return true;
+        }
+
         Node futureParent = root.findLower(element);
         Node newNode = new Node(element);
 
         if (futureParent == null) {
-            if (isEmpty()) {
-                futureParent = root;
-                root.left = newNode;
-                root.right = newNode;
-            } else {
-                futureParent = root.goLeft();
-                futureParent.left = newNode;
-            }
+            futureParent = root.goLeft();
+            futureParent.left = newNode;
         } else {
             if (futureParent.right == null) {
                 futureParent.right = newNode;
@@ -552,12 +547,17 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
         newNode.parent = futureParent;
         futureParent.changeParentsSizes(1);
         version++;
+        size++;
         return true;
     }
 
     @Override
     public boolean contains(@NotNull Object element) {
-        return root.contains(element);
+        if (root == null) {
+            return false;
+        } else {
+            return root.contains(element);
+        }
     }
 
     /**
@@ -594,6 +594,12 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
     private void removeSingleChildrenNode(@NotNull Node node) {
         Node son = node.left == null ? node.right : node.left;
 
+        if (node.parent == null) {
+            root = son;
+            size--;
+            return;
+        }
+
         if (node.parent.left == node) {
             node.parent.left = son;
         }
@@ -603,12 +609,12 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
         }
 
         node.parent.changeParentsSizes(-1);
+        size--;
     }
 
     @Override
     public void clear() {
-        root.size = 0;
-        root.left = null;
-        root.right = null;
+        size = 0;
+        root = null;
     }
 }
