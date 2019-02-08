@@ -185,7 +185,7 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
      * Implements iterator for BST
      * */
     public class BinarySearchTreeIterator implements Iterator<E> {
-        @Nullable Node node;
+        @Nullable private Node node;
         private boolean isReversed;
         /**
          * Version of tree for which this iterator is valid
