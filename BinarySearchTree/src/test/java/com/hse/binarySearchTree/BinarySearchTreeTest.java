@@ -8,12 +8,7 @@ import java.util.ConcurrentModificationException;
 import static org.junit.jupiter.api.Assertions.*;
 
 class BinarySearchTreeTest {
-    private Comparator<Integer> comparator = new Comparator<Integer>() {
-        @Override
-        public int compare(Integer a, Integer b) {
-            return  Math.abs(a % 4) - Math.abs(b % 4);
-        }
-    };
+    private Comparator<Integer> comparator = (a, b) -> Math.abs(a % 4) - Math.abs(b % 4);
 
     @Test
     void testAddInteger() {
@@ -120,29 +115,50 @@ class BinarySearchTreeTest {
     }
 
     @Test
-    void testFirstLast() {
+    void testFirstAssertion() {
         var bst = new BinarySearchTree<Integer>();
 
-        assertThrows(IllegalArgumentException.class, bst::first);
-        assertThrows(IllegalArgumentException.class, bst::last);
+        assertThrows(IllegalStateException.class, bst::first);
+    }
+
+    @Test
+    void testLastAssertion() {
+        var bst = new BinarySearchTree<Integer>();
+
+        assertThrows(IllegalStateException.class, bst::last);
+    }
+
+    @Test
+    void testFirst() {
+        var bst = new BinarySearchTree<Integer>();
 
         bst.add(6);
         assertEquals(Integer.valueOf(6), bst.first());
-        assertEquals(Integer.valueOf(6), bst.last());
         bst.add(8);
         bst.add(1);
         assertEquals(Integer.valueOf(1), bst.first());
+        bst.remove(8);
+        assertEquals(Integer.valueOf(1), bst.first());
+    }
+
+    @Test
+    void testLast() {
+        var bst = new BinarySearchTree<Integer>();
+
+        bst.add(6);
+        assertEquals(Integer.valueOf(6), bst.last());
+        bst.add(8);
+        bst.add(1);
         assertEquals(Integer.valueOf(8), bst.last());
         bst.remove(8);
         assertEquals(Integer.valueOf(6), bst.last());
     }
 
     @Test
-    void testLowerHigher() {
+    void testLower() {
         var bst = new BinarySearchTree<Integer>();
 
         assertNull(bst.lower(0));
-        assertNull(bst.higher(90));
 
         bst.add(1000);
         bst.add(32);
@@ -150,16 +166,28 @@ class BinarySearchTreeTest {
 
         assertEquals(Integer.valueOf(1000), bst.lower(20000));
         assertEquals(Integer.valueOf(32), bst.lower(1000));
+        assertNull(bst.higher(1000));
+    }
+
+    @Test
+    void testHigher() {
+        var bst = new BinarySearchTree<Integer>();
+
+        assertNull(bst.higher(90));
+
+        bst.add(1000);
+        bst.add(32);
+        bst.add(-40);
+
         assertEquals(Integer.valueOf(1000), bst.higher(45));
         assertNull(bst.higher(1000));
     }
 
     @Test
-    void testFloorCeiling() {
+    void testFloor() {
         var bst = new BinarySearchTree<Integer>();
 
         assertNull(bst.floor(0));
-        assertNull(bst.ceiling(90));
 
         bst.add(1000);
         bst.add(321);
@@ -168,8 +196,22 @@ class BinarySearchTreeTest {
 
         assertEquals(Integer.valueOf(1000), bst.floor(20000));
         assertEquals(Integer.valueOf(1000), bst.floor(1000));
-        assertEquals(Integer.valueOf(321), bst.higher(151));
-        assertNull(bst.higher(10000));
+    }
+
+    @Test
+    void testCeiling() {
+        var bst = new BinarySearchTree<Integer>();
+
+        assertNull(bst.ceiling(90));
+
+        bst.add(1000);
+        bst.add(321);
+        bst.add(-445);
+        bst.add(68);
+
+        assertEquals(Integer.valueOf(1000), bst.ceiling(1000));
+        assertEquals(Integer.valueOf(321), bst.ceiling(151));
+        assertNull(bst.ceiling(10000));
     }
 
     @Test
@@ -207,7 +249,7 @@ class BinarySearchTreeTest {
     }
 
     @Test
-    void descendingSet() {
+    void testDescendingSet() {
         var bst = new BinarySearchTree<Integer>();
 
         bst.add(7);
@@ -259,13 +301,8 @@ class BinarySearchTreeTest {
 
     @Test
     void testNumberWithComparator() {
-        var comparator = new Comparator<Number>() {
-            @Override
-            public int compare(Number o1, Number o2) {
-                return o1.value - o2.value;
-            }
-        };
-        var bst = new BinarySearchTree<Number>(comparator);
+        Comparator<Number> comparator = (o1, o2) -> o1.value - o2.value;
+        var bst = new BinarySearchTree<>(comparator);
 
         bst.add(new Number(4));
         bst.add(new Number(50));

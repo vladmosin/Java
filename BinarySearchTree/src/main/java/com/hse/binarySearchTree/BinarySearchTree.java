@@ -117,7 +117,7 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
 
             if (resultOfComparison == 0) {
                 return this;
-            } else if (resultOfComparison > 0){
+            } else if (resultOfComparison > 0) {
                 return right == null ? null : right.find(element);
             } else {
                 return left == null ? null : left.find(element);
@@ -211,10 +211,10 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
             }
 
             if (isReversed) {
-                return findNext() != null;
+                return findNextInTreeOrder() != null;
             }
 
-            return findPrevious() != null;
+            return findPreviousInTreeOrder() != null;
         }
 
         /**
@@ -224,15 +224,15 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
         @NotNull
         public E previous() {
             if (!hasPrevious()) { // if iterator is invalid hasPrevious throws exception
-                throw new IllegalArgumentException("no previous element");
+                throw new NoSuchElementException("no previous element");
             }
 
             E element = node.value;
 
             if (isReversed) {
-                node = findNext();
+                node = findNextInTreeOrder();
             } else {
-                node = findPrevious();
+                node = findPreviousInTreeOrder();
             }
 
             return element;
@@ -248,10 +248,10 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
             }
 
             if (isReversed) {
-                return findPrevious() != null;
+                return findPreviousInTreeOrder() != null;
             }
 
-            return findNext() != null;
+            return findNextInTreeOrder() != null;
         }
 
         /**
@@ -261,7 +261,7 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
         @NotNull
         public E next() {
             if (!hasNext()) { // if iterator is invalid hasNext throws exception
-                throw new IllegalArgumentException("no next element");
+                throw new NoSuchElementException("no next element");
             }
 
             // if current node is null, then the next element is the smallest or biggest in BST
@@ -276,9 +276,9 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
             }
 
             if (isReversed) {
-                node = findPrevious();
+                node = findPreviousInTreeOrder();
             } else {
-                node = findNext();
+                node = findNextInTreeOrder();
             }
 
             return node.value;
@@ -288,7 +288,7 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
          * Finds next element
          * */
         @Nullable
-        private Node findNext() {
+        private Node findNextInTreeOrder() {
             if (isInvalid()) {
                 throw new ConcurrentModificationException("tree was modified");
             }
@@ -308,7 +308,7 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
          * Finds previous element
          * */
         @Nullable
-        private Node findPrevious() {
+        private Node findPreviousInTreeOrder() {
             if (isInvalid()) {
                 throw new ConcurrentModificationException("tree was modified");
             }
@@ -344,12 +344,9 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
 
     public BinarySearchTree(@NotNull Comparator<? super E> comparator) {
         this.comparator = comparator;
-        isReversed = false;
     }
 
-    public BinarySearchTree() {
-        isReversed = false;
-    }
+    public BinarySearchTree() {}
 
     @SuppressWarnings("unchecked")
     private int compareElement(@NotNull Object o1, @NotNull E o2) {
@@ -404,7 +401,7 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
     @NotNull
     public E first() {
         if (root == null) {
-            throw new IllegalArgumentException("No elements in BST");
+            throw new IllegalStateException("No elements in BST");
         }
 
         return root.goLeft().value;
@@ -417,7 +414,7 @@ public class BinarySearchTree<E> extends AbstractSet<E> implements MyTreeSet<E> 
     @NotNull
     public E last() {
         if (root == null) {
-            throw new IllegalArgumentException("No elements in BST");
+            throw new IllegalStateException("No elements in BST");
         }
 
         return root.goRight().value;
