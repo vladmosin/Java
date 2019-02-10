@@ -312,7 +312,7 @@ class BinarySearchTreeTest {
         assertTrue(bst.contains(new Number(7)));
         assertFalse(bst.contains(new Number(745)));
 
-        assertTrue(bst.remove(new Number(4111)));
+        assertTrue(bst.remove(new Number(4)));
         assertFalse(bst.remove(new Number(51)));
     }
 }
