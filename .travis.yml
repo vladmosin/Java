@@ -5,6 +5,6 @@ os:
 - linux
 env:
 - PROJECT_DIR=BinarySearchTree
-- PROJECT_DIR=HashMap
 - PROJECT_DIR=Trie
+- PROJECT_DIR=HashMap
 script: cd $PROJECT_DIR && mvn test
