@@ -6,3 +6,5 @@
 *.txt
 *.jar
 *.properties
+*.exe
+*.meta
