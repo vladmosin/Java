@@ -2,7 +2,6 @@ package com.hse.db;
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class WorkWithDB {

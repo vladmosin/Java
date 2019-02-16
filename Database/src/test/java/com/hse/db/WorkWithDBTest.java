@@ -1,6 +1,5 @@
 package com.hse.db;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -11,15 +10,15 @@ import static org.junit.jupiter.api.Assertions.*;
 class WorkWithDBTest {
     private WorkWithDB dbManager = new WorkWithDB();
 
-    WorkWithDBTest() throws SQLException, ClassNotFoundException {}
+    public WorkWithDBTest() throws SQLException, ClassNotFoundException {}
 
     @BeforeEach
-    void clear() throws SQLException {
+    public void clear() throws SQLException {
         dbManager.clear();
     }
 
     @Test
-    void testInsert() throws SQLException {
+    public void testInsert() throws SQLException {
         dbManager.insert("cat", "235");
         dbManager.insert("dog", "239042");
         dbManager.insert("elephant", "23420");
@@ -35,7 +34,7 @@ class WorkWithDBTest {
     }
 
     @Test
-    void testDelete() throws SQLException {
+    public void testDelete() throws SQLException {
         dbManager.insert("cat", "93284");
         dbManager.insert("dog", "32094");
         dbManager.delete("cat", "93284");
@@ -49,7 +48,7 @@ class WorkWithDBTest {
     }
 
     @Test
-    void testfindByName() throws SQLException {
+    public void testFindByName() throws SQLException {
         dbManager.insert("cat", "93284");
         dbManager.insert("cat", "093");
         dbManager.insert("cat", "mkfwe32");
@@ -71,7 +70,7 @@ class WorkWithDBTest {
     }
 
     @Test
-    void testFindByPhone() throws SQLException {
+    public void testFindByPhone() throws SQLException {
         dbManager.insert("cat", "4");
         dbManager.insert("dog", "4");
         dbManager.insert("mouse", "4");
@@ -85,7 +84,7 @@ class WorkWithDBTest {
     }
 
     @Test
-    void testUpdateName() throws SQLException {
+    public void testUpdateName() throws SQLException {
         dbManager.insert("cat", "3421");
         dbManager.updateName("cat", "3421", "dog");
 
@@ -105,7 +104,7 @@ class WorkWithDBTest {
     }
 
     @Test
-    void testUpdatePhone() throws SQLException {
+    public void testUpdatePhone() throws SQLException {
         dbManager.insert("first", "3");
         dbManager.insert("second", "3");
         dbManager.updatePhone("first", "3", "4");
@@ -118,7 +117,7 @@ class WorkWithDBTest {
     }
 
     @Test
-    void testEmptyDelete() throws SQLException {
+    public void testEmptyDelete() throws SQLException {
         dbManager.delete("a", "1");
         dbManager.insert("a", "1");
         dbManager.delete("1", "2");
@@ -126,7 +125,7 @@ class WorkWithDBTest {
     }
 
     @Test
-    void testNonexistentUpdateName() throws SQLException {
+    public void testNonexistentUpdateName() throws SQLException {
         dbManager.insert("a", "1");
         dbManager.updateName("1", "2", "a");
         assertEquals(1, dbManager.getAllRecords().size());
@@ -135,7 +134,7 @@ class WorkWithDBTest {
     }
 
     @Test
-    void testNonexistentUpdatePhone() throws SQLException {
+   public void testNonexistentUpdatePhone() throws SQLException {
         dbManager.insert("a", "1");
         dbManager.updatePhone("1", "2", "a");
         assertEquals(1, dbManager.getAllRecords().size());
