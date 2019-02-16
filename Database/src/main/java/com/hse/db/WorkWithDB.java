@@ -13,14 +13,6 @@ public class WorkWithDB {
         connection = DriverManager.getConnection("jdbc:sqlite:database.db");
     }
 
-    public void dropTable(String tableName) throws SQLException {
-        String query = "DROP TABLE " + tableName + ";";
-        Statement statement = connection.createStatement();
-
-        statement.executeUpdate(query);
-        statement.close();
-    }
-
     public void insert(String name, String phone) throws SQLException {
         if (isInjection(name) || isInjection(phone)) {
             throw new IllegalArgumentException("SQL-injection given");
@@ -101,7 +93,7 @@ public class WorkWithDB {
 
         String query = "UPDATE phonebook SET " +
                 "phone = '" + newPhone + "' " +
-                "WHERE phone = '" + phone + "' AND name = '" + name + "');";
+                "WHERE phone = '" + phone + "' AND name = '" + name + "';";
         executeUpdateQuery(query);
     }
 
