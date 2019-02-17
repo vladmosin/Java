@@ -3,6 +3,7 @@ package com.hse.db;
 import java.sql.SQLException;
 import java.util.Scanner;
 
+/**Interactive program to work with database*/
 public class Phonebook {
     public static void main(String[] args) throws SQLException, ClassNotFoundException {
         int command;

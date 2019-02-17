@@ -1,5 +1,6 @@
 package com.hse.db;
 
+/**Stores phone and name*/
 public class PhonebookNode {
     private String phone;
     private String name;
