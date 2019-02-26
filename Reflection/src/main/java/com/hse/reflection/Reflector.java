@@ -31,22 +31,27 @@ public class Reflector {
     public static void diffClasses(Class<?> first, Class<?> second) {
         var differentMethods = getDifferentMethods(first, second);
         var differentFields = getDifferentFields(first, second);
+
+        try (var out = new PrintWriter(System.out)) {
+            printMethods(differentMethods, out, 0);
+            printFields(differentFields, out, 0);
+        }
     }
 
-    private static List<Method> getDifferentMethods(Class<?> first, Class<?> second) {
+    private static Method[] getDifferentMethods(Class<?> first, Class<?> second) {
         var firstMethods = first.getDeclaredMethods();
         var secondMethods = second.getDeclaredMethods();
 
         return getDifferentMethods(firstMethods, secondMethods);
     }
 
-    private static List<Method> getDifferentMethods(Method[] firstMethods, Method[] secondMethods) {
+    private static Method[] getDifferentMethods(Method[] firstMethods, Method[] secondMethods) {
         return Stream.concat(
                 Arrays.stream(firstMethods)
                       .filter(method -> containsMethod(secondMethods, method)),
                 Arrays.stream(firstMethods)
                       .filter(method -> containsMethod(secondMethods, method)))
-                .collect(Collectors.toList());
+                .toArray(Method[]::new);
     }
 
     private static boolean containsMethod(Method[] methods, Method givenMethod) {
@@ -66,20 +71,20 @@ public class Reflector {
                Arrays.equals(first.getParameterTypes(), second.getParameterTypes());
     }
 
-    private static List<Field> getDifferentFields(Class<?> first, Class<?> second) {
+    private static Field[] getDifferentFields(Class<?> first, Class<?> second) {
         var firstFields = first.getDeclaredFields();
         var secondFields = second.getDeclaredFields();
 
         return getDifferentFields(firstFields, secondFields);
     }
 
-    private static List<Field> getDifferentFields(Field[] firstFields, Field[] secondFields) {
+    private static Field[] getDifferentFields(Field[] firstFields, Field[] secondFields) {
         return Stream.concat(
                 Arrays.stream(firstFields)
                         .filter(field -> containsField(secondFields, field)),
                 Arrays.stream(firstFields)
                         .filter(field -> containsField(secondFields, field)))
-                .collect(Collectors.toList());
+                .toArray(Field[]::new);
     }
 
     private static boolean containsField(Field[] fields, Field givenField) {
@@ -112,6 +117,23 @@ public class Reflector {
         out.print(Modifier.toString(clazz.getModifiers()) + " " + clazz.getName());
         printDependencies(clazz.getTypeParameters(), out,
                 new Template("<", ">", ", "), Definition.NO);
+        if (clazz.getGenericSuperclass() != null) {
+            out.print(" extends ");
+            printDependency(clazz.getGenericSuperclass(), out, Definition.NO);
+        }
+
+        if (clazz.getGenericInterfaces().length > 0) {
+            printDependencies(clazz.getGenericInterfaces(), out,
+                    new Template(" implements ", " {\n", " & "), Definition.NO);
+        }
+
+        for (var classes : clazz.getDeclaredClasses()) {
+            printFullClass(clazz, out, tabs + 1);
+        }
+
+        printConstructors(clazz.getDeclaredConstructors(), out, clazz.getSimpleName(), tabs + 1);
+        printFields(clazz.getDeclaredFields(), out, tabs + 1);
+        printMethods(clazz.getDeclaredMethods(), out, tabs + 1);
     }
 
     private static void printDependency(Type type, PrintWriter out, Definition isDefinition) {
@@ -196,7 +218,47 @@ public class Reflector {
         printDependencies(constructor.getGenericExceptionTypes(), out,
                 new Template("throws ", "", ", "), Definition.NO);
         printMethodBody(out);
+    }
 
+    private static void printConstructors(Constructor[] constructors, PrintWriter out, String className, int tabs) {
+        for (var constructor : constructors) {
+            printTabs(tabs, out);
+            printConstructor(constructor, out, className);
+            out.print("\n");
+        }
+    }
+
+    private static void printFields(Field[] fields, PrintWriter out, int tabs) {
+        for (var field : fields) {
+            printTabs(tabs, out);
+            printField(field, out);
+            out.print("\n");
+        }
+    }
+
+    private static void printField(Field field, PrintWriter out) {
+        out.print(Modifier.toString(field.getModifiers()) + " ");
+        printDependency(field.getGenericType(), out, Definition.NO);
+        out.print(" " + field.getName() + ";");
+    }
+
+    private static void printMethods(Method[] methods, PrintWriter out, int tabs) {
+        for (var method : methods) {
+            printTabs(tabs, out);
+            printMethod(method, out);
+            out.print("\n");
+        }
+    }
+
+    private static void printMethod(Method method, PrintWriter out) {
+        out.print(Modifier.toString(method.getModifiers()) + " ");
+        printDependencies(method.getTypeParameters(), out,
+                new Template("<", "> ", ", "), Definition.NO);
+        printDependency(method.getReturnType(), out, Definition.NO);
+        out.print(" ( ");
+        printArguments(method.getGenericParameterTypes(), out);
+        out.print(" ) ");
+        printMethodBody(out);
     }
 
     private static void printTabs(int tabs, PrintWriter out) {
