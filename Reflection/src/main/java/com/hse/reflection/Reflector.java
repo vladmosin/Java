@@ -105,6 +105,7 @@ public class Reflector {
 
     public static void printStructure(Class<?> clazz) throws FileNotFoundException {
         String className = clazz.getSimpleName();
+
         try (var out = new PrintWriter(new File(className + ".java"))) {
             out.println("package " + clazz.getPackageName() + ";");
             out.println();
@@ -124,9 +125,10 @@ public class Reflector {
 
         if (clazz.getGenericInterfaces().length > 0) {
             printDependencies(clazz.getGenericInterfaces(), out,
-                    new Template(" implements ", " {\n", " & "), Definition.NO);
+                    new Template(" implements ", "", " & "), Definition.NO);
         }
 
+        out.print(" {\n");
         for (var classes : clazz.getDeclaredClasses()) {
             printFullClass(clazz, out, tabs + 1);
         }
@@ -163,14 +165,7 @@ public class Reflector {
     }
 
     private static void printInstanceOfParameterizedType(ParameterizedType parameterizedType, PrintWriter out) {
-        var ownerType = parameterizedType.getOwnerType();
-
-        if (ownerType != null) {
-            printDependency(ownerType, out, Definition.NO);
-            out.print(".");
-        }
-
-        printDependency(parameterizedType, out, Definition.NO);
+        printDependency(parameterizedType.getRawType(), out, Definition.NO);
         printDependencies(parameterizedType.getActualTypeArguments(), out,
                 new Template("<", ">", ","), Definition.NO);
     }
@@ -206,6 +201,8 @@ public class Reflector {
             wasPrinted = true;
             printDependency(type, out, isDefinition);
         }
+
+        out.print(template.suffix);
     }
 
     private static void printConstructor(Constructor constructor, PrintWriter out, String className) {
@@ -239,7 +236,13 @@ public class Reflector {
     private static void printField(Field field, PrintWriter out) {
         out.print(Modifier.toString(field.getModifiers()) + " ");
         printDependency(field.getGenericType(), out, Definition.NO);
-        out.print(" " + field.getName() + ";");
+        out.print(" " + field.getName());
+        if (Modifier.isFinal(field.getModifiers())) {
+            out.print(" = ");
+            printDefaultValue(field.getGenericType(), out);
+        }
+
+        out.print(";\n");
     }
 
     private static void printMethods(Method[] methods, PrintWriter out, int tabs) {
@@ -255,6 +258,7 @@ public class Reflector {
         printDependencies(method.getTypeParameters(), out,
                 new Template("<", "> ", ", "), Definition.NO);
         printDependency(method.getReturnType(), out, Definition.NO);
+        out.print(" " + method.getName());
         out.print(" ( ");
         printArguments(method.getGenericParameterTypes(), out);
         out.print(" ) ");
@@ -270,7 +274,7 @@ public class Reflector {
     }
 
     private static void printMethodBody(PrintWriter out) {
-        out.print("{ throw new NotImplementedException() };\n");
+        out.print("{ throw new NotImplementedException() }\n");
     }
 
     private static void printArguments(Type[] types, PrintWriter out) {
@@ -284,8 +288,26 @@ public class Reflector {
 
             wasPrinted = true;
             printDependency(type, out, Definition.NO);
-            out.print("var" + counter);
+            out.print(" var" + counter);
             counter++;
         }
+    }
+
+    private static void printDefaultValue(Type type, PrintWriter out) {
+        if (!(type instanceof Class)) {
+            out.print("null");
+            return;
+        }
+
+        var clazz = (Class<?>) type;
+
+        if (!clazz.isPrimitive()) {
+            out.print("null");
+            return;
+        }
+
+        var arrayWithOneElement = Array.newInstance(clazz, 1);
+
+        out.print(Array.get(arrayWithOneElement, 0).toString());
     }
 }
