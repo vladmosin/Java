@@ -1,12 +1,14 @@
 package com.hse.db;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 /** Stores methods to work with database */
 public class WorkWithDB {
-    private Connection connection;
+    @NotNull private Connection connection;
 
     /**Uses sqlite as database*/
     public WorkWithDB() throws SQLException, ClassNotFoundException {
@@ -14,65 +16,87 @@ public class WorkWithDB {
         connection = DriverManager.getConnection("jdbc:sqlite:database.db");
     }
 
-    public void insert(String name, String phone) throws SQLException {
+    public void insert(@NotNull String name, @NotNull String phone) throws SQLException {
         String query = "INSERT INTO phonebook (name, phone) " +
-                       "VALUES ('" + name + "', '" + phone + "')";
-        executeUpdateQuery(query);
+                       "VALUES (?, ?)";
+
+        try (var statement = connection.prepareStatement(query)) {
+            statement.setString(1, name);
+            statement.setString(2, phone);
+            statement.executeUpdate();
+        }
     }
 
     /**Finds all phones by given name*/
-    public List<String> findByName(String name) throws SQLException {
+    public List<String> findByName(@NotNull String name) throws SQLException {
         String query = "SELECT phone FROM phonebook " +
-                       "WHERE name = '" + name + "';";
-        Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery(query);
-        var list = new ArrayList<String>();
+                       "WHERE name = ?;";
 
-        while (resultSet.next()) {
-            list.add(resultSet.getString("phone"));
-        }
-
-        statement.close();
-        return list;
+        return launchFind(name, query);
     }
 
     /**Finds all names by given phone*/
-    public List<String> findByPhone(String phone) throws SQLException {
+    public List<String> findByPhone(@NotNull String phone) throws SQLException {
         String query = "SELECT name FROM phonebook " +
-                "WHERE phone = '" + phone + "';";
-        Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery(query);
-        var list = new ArrayList<String>();
+                "WHERE phone = ?;";
 
-        while (resultSet.next()) {
-            list.add(resultSet.getString("name"));
+        return launchFind(phone, query);
+    }
+
+    private List<String> launchFind(@NotNull String element, @NotNull String query) throws SQLException {
+        try (var statement = connection.prepareStatement(query)) {
+            statement.setString(1, element);
+            var resultSet = statement.executeQuery();
+            var list = new ArrayList<String>();
+
+            while (resultSet.next()) {
+                list.add(resultSet.getString(1));
+            }
+
+            return list;
         }
-
-        statement.close();
-        return list;
     }
 
     /**Delete all pairs (name, phone)*/
-    public void delete(String name, String phone) throws SQLException {
+    public void delete(@NotNull String name, @NotNull String phone) throws SQLException {
         String query = "DELETE FROM phonebook " +
-                       "WHERE phone = '" + phone + "' AND name = '" + name + "';";
-        executeUpdateQuery(query);
+                       "WHERE phone = ? AND name = ?;";
+
+        try (var statement = connection.prepareStatement(query)) {
+            statement.setString(1, phone);
+            statement.setString(2, name);
+            statement.execute();
+        }
     }
 
     /**Changes pairs (name, phone) on (newName, phone)*/
-    public void updateName(String name, String phone, String newName) throws SQLException {
+    public void updateName(@NotNull String name, @NotNull String phone,
+                           @NotNull String newName) throws SQLException {
         String query = "UPDATE phonebook SET " +
-                       "name = '" + newName + "' " +
-                       "WHERE phone = '" + phone + "' AND name = '" + name + "';";
-        executeUpdateQuery(query);
+                       "name = ? " +
+                       "WHERE phone = ? AND name = ?;";
+
+        launchUpdate(name, phone, newName, query);
     }
 
     /**Changes pairs (name, phone) on (name, newPhone)*/
-    public void updatePhone(String name, String phone, String newPhone) throws SQLException {
+    public void updatePhone(@NotNull String name, @NotNull String phone,
+                            @NotNull String newPhone) throws SQLException {
         String query = "UPDATE phonebook SET " +
-                "phone = '" + newPhone + "' " +
-                "WHERE phone = '" + phone + "' AND name = '" + name + "';";
-        executeUpdateQuery(query);
+                "phone = ? " +
+                "WHERE phone = ? AND name = ?;";
+
+        launchUpdate(name, phone, newPhone, query);
+    }
+
+    public void launchUpdate(@NotNull String name, @NotNull String phone, @NotNull String newElement,
+                             @NotNull String query) throws SQLException {
+        try (var statement = connection.prepareStatement(query)) {
+            statement.setString(1, newElement);
+            statement.setString(2, phone);
+            statement.setString(3, name);
+            statement.execute();
+        }
     }
 
     /**Returns all records in database, which consists of name and phone*/
@@ -95,13 +119,8 @@ public class WorkWithDB {
     /**Deletes all elements from phonebook*/
     public void clear() throws SQLException {
         String query = "DELETE FROM phonebook";
-        executeUpdateQuery(query);
-    }
-
-    /**Execute given query*/
-    private void executeUpdateQuery(String query) throws SQLException {
-        PreparedStatement statement = connection.prepareStatement(query);
-        statement.execute();
-        statement.close();
+        try (var statement = connection.prepareStatement(query)) {
+            statement.execute();
+        }
     }
 }
