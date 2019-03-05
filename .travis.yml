@@ -8,5 +8,4 @@ env:
 - PROJECT_DIR=Trie
 - PROJECT_DIR=HashMap
 - PROJECT_DIR=Reflection
-- PROJECT_DIR=Database
 script: cd $PROJECT_DIR && mvn test
