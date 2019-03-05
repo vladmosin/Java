@@ -1,60 +1,67 @@
 package com.hse.reflection;
 
+import jdk.jshell.spi.ExecutionControl;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Scanner;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Reflector {
     private static final int SPACES_PER_TAB = 4;
+    @NotNull private static String currentPackage = "";
 
     private enum Definition { YES, NO }
 
     private static class Template {
-        private String prefix;
-        private String suffix;
-        private String separator;
+        @NotNull private String prefix;
+        @NotNull private String suffix;
+        @NotNull private String separator;
 
-        private Template(String prefix, String suffix, String separator) {
+        private Template(@NotNull String prefix, @NotNull String suffix, @NotNull String separator) {
             this.prefix = prefix;
             this.suffix = suffix;
             this.separator = separator;
         }
     }
 
-    public static void diffClasses(Class<?> first, Class<?> second) {
+    public static void diffClasses(@NotNull Class<?> first, @NotNull Class<?> second, @NotNull PrintWriter out) {
         var differentMethods = getDifferentMethods(first, second);
         var differentFields = getDifferentFields(first, second);
+        printMethods(differentMethods, out, 0);
+        printFields(differentFields, out, 0);
+    }
 
+    public static void diffClasses(@NotNull Class<?> first, @NotNull Class<?> second) {
         try (var out = new PrintWriter(System.out)) {
-            printMethods(differentMethods, out, 0);
-            printFields(differentFields, out, 0);
+            diffClasses(first, second, out);
         }
     }
 
-    private static Method[] getDifferentMethods(Class<?> first, Class<?> second) {
+    @NotNull private static Method[] getDifferentMethods(@NotNull Class<?> first, @NotNull Class<?> second) {
         var firstMethods = first.getDeclaredMethods();
         var secondMethods = second.getDeclaredMethods();
 
         return getDifferentMethods(firstMethods, secondMethods);
     }
 
-    private static Method[] getDifferentMethods(Method[] firstMethods, Method[] secondMethods) {
+    @NotNull private static Method[] getDifferentMethods(@NotNull Method[] firstMethods,
+                                                         @NotNull Method[] secondMethods) {
         return Stream.concat(
                 Arrays.stream(firstMethods)
-                      .filter(method -> containsMethod(secondMethods, method)),
+                      .filter(method -> !containsMethod(secondMethods, method)),
                 Arrays.stream(firstMethods)
-                      .filter(method -> containsMethod(secondMethods, method)))
+                      .filter(method -> !containsMethod(secondMethods, method)))
                 .toArray(Method[]::new);
     }
 
-    private static boolean containsMethod(Method[] methods, Method givenMethod) {
+    private static boolean containsMethod(@NotNull Method[] methods, @NotNull Method givenMethod) {
         for (var method : methods) {
             if (methodsEqual(method, givenMethod)) {
                 return true;
@@ -64,30 +71,30 @@ public class Reflector {
         return false;
     }
 
-    private static boolean methodsEqual(Method first, Method second) {
+    private static boolean methodsEqual(@NotNull Method first, @NotNull Method second) {
         return first.getName().equals(second.getName()) &&
                first.getGenericReturnType().equals(second.getGenericReturnType()) &&
                first.getModifiers() == second.getModifiers() &&
                Arrays.equals(first.getParameterTypes(), second.getParameterTypes());
     }
 
-    private static Field[] getDifferentFields(Class<?> first, Class<?> second) {
+    @NotNull private static Field[] getDifferentFields(@NotNull Class<?> first, @NotNull Class<?> second) {
         var firstFields = first.getDeclaredFields();
         var secondFields = second.getDeclaredFields();
 
         return getDifferentFields(firstFields, secondFields);
     }
 
-    private static Field[] getDifferentFields(Field[] firstFields, Field[] secondFields) {
+    @NotNull private static Field[] getDifferentFields(@NotNull Field[] firstFields, @NotNull Field[] secondFields) {
         return Stream.concat(
                 Arrays.stream(firstFields)
-                        .filter(field -> containsField(secondFields, field)),
+                        .filter(field -> !containsField(secondFields, field)),
                 Arrays.stream(firstFields)
-                        .filter(field -> containsField(secondFields, field)))
+                        .filter(field -> !containsField(secondFields, field)))
                 .toArray(Field[]::new);
     }
 
-    private static boolean containsField(Field[] fields, Field givenField) {
+    private static boolean containsField(@NotNull Field[] fields, @NotNull Field givenField) {
         for (var field : fields) {
             if (fieldsEqual(field, givenField)) {
                 return true;
@@ -97,48 +104,50 @@ public class Reflector {
         return false;
     }
 
-    private static boolean fieldsEqual(Field first, Field second) {
+    private static boolean fieldsEqual(@NotNull Field first, @NotNull Field second) {
         return first.getName().equals(second.getName()) &&
                first.getGenericType().equals(second.getGenericType()) &&
                first.getModifiers() == second.getModifiers();
     }
 
-    public static void printStructure(Class<?> clazz) throws FileNotFoundException {
+    public static void printStructure(@NotNull Class<?> clazz) throws FileNotFoundException {
         String className = clazz.getSimpleName();
 
         try (var out = new PrintWriter(new File(className + ".java"))) {
-            out.println("package " + clazz.getPackageName() + ";");
-            out.println();
             printFullClass(clazz, out, 0);
         }
     }
 
-    private static void printFullClass(Class<?> clazz, PrintWriter out, int tabs) {
+    private static void printFullClass(@NotNull Class<?> clazz, @NotNull PrintWriter out, int tabs) {
+        currentPackage = clazz.getPackageName();
         printTabs(tabs, out);
-        out.print(Modifier.toString(clazz.getModifiers()) + " " + clazz.getName());
+        out.print(Modifier.toString(clazz.getModifiers()) + " class " + getSimpleName(clazz));
         printDependencies(clazz.getTypeParameters(), out,
                 new Template("<", ">", ", "), Definition.NO);
-        if (clazz.getGenericSuperclass() != null) {
+        if (clazz.getGenericSuperclass() != null && clazz.getGenericSuperclass() != Object.class) {
             out.print(" extends ");
             printDependency(clazz.getGenericSuperclass(), out, Definition.NO);
         }
 
         if (clazz.getGenericInterfaces().length > 0) {
             printDependencies(clazz.getGenericInterfaces(), out,
-                    new Template(" implements ", "", " & "), Definition.NO);
+                    new Template(" implements ", "", ", "), Definition.NO);
         }
 
         out.print(" {\n");
-        for (var classes : clazz.getDeclaredClasses()) {
-            printFullClass(clazz, out, tabs + 1);
+        for (var innerOrNestedClass : clazz.getDeclaredClasses()) {
+            printFullClass(innerOrNestedClass, out, tabs + 1);
         }
 
-        printConstructors(clazz.getDeclaredConstructors(), out, clazz.getSimpleName(), tabs + 1);
+        printConstructors(clazz.getDeclaredConstructors(), out, tabs + 1);
         printFields(clazz.getDeclaredFields(), out, tabs + 1);
         printMethods(clazz.getDeclaredMethods(), out, tabs + 1);
+
+        out.print("}");
     }
 
-    private static void printDependency(Type type, PrintWriter out, Definition isDefinition) {
+    private static void printDependency(@NotNull Type type, @NotNull PrintWriter out,
+                                        @NotNull Definition isDefinition) {
         if (type instanceof Class) {
             printInstanceOfClass((Class<?>) type, out);
         } else if (type instanceof WildcardType) {
@@ -152,48 +161,63 @@ public class Reflector {
         }
     }
 
-    private static void printInstanceOfClass(Class<?> clazz, PrintWriter out) {
-        out.print(clazz.getName());
-    }
-
-    private static void printInstanceOfWildCardType(WildcardType wildcardType, PrintWriter out) {
-        out.print("? ");
-        printDependencies(wildcardType.getLowerBounds(), out,
-                new Template("super ", "", " & "), Definition.NO);
-        printDependencies(wildcardType.getUpperBounds(), out,
-                new Template("extends ", "", " & "), Definition.NO);
-    }
-
-    private static void printInstanceOfParameterizedType(ParameterizedType parameterizedType, PrintWriter out) {
-        printDependency(parameterizedType.getRawType(), out, Definition.NO);
-        printDependencies(parameterizedType.getActualTypeArguments(), out,
-                new Template("<", ">", ","), Definition.NO);
-    }
-
-    private static void printInstanceOfGenericArrayType(GenericArrayType genericArrayType,
-                                                        Definition isDefinition, PrintWriter out) {
-        printDependency(genericArrayType.getGenericComponentType(), out, isDefinition);
-        out.print("[]");
-    }
-
-    private static void printInstanceOfTypeVariable(TypeVariable<?> typeVariable,
-                                                    Definition isDefinition, PrintWriter out) {
-        out.print(typeVariable.getName());
-        if (isDefinition == Definition.YES) {
-            printDependencies(typeVariable.getBounds(), out,
-                    new Template("extends ", "", " & "), Definition.NO);
+    private static void printInstanceOfClass(@NotNull Class<?> clazz, @NotNull PrintWriter out) {
+        if (clazz.isArray()) {
+            printDependency(clazz.getComponentType(), out, Definition.NO);
+            out.print("[] ");
+        } else {
+            out.print(getSimpleName(clazz));
         }
     }
 
-    private static void printDependencies(Type[] types, PrintWriter out, Template template, Definition isDefinition) {
-        if (types.length == 0) {
+    private static void printInstanceOfWildCardType(@NotNull WildcardType wildcardType, @NotNull PrintWriter out) {
+        out.print("? ");
+        printDependencies(wildcardType.getLowerBounds(), out,
+                new Template("super ", " ", " & "), Definition.NO);
+        printDependencies(wildcardType.getUpperBounds(), out,
+                new Template("extends ", " ", " & "), Definition.NO);
+    }
+
+    private static void printInstanceOfParameterizedType(@NotNull ParameterizedType parameterizedType,
+                                                         @NotNull PrintWriter out) {
+        printDependency(parameterizedType.getRawType(), out, Definition.NO);
+        printDependencies(parameterizedType.getActualTypeArguments(), out,
+                new Template("<", "> ", ", "), Definition.NO);
+    }
+
+    private static void printInstanceOfGenericArrayType(@NotNull GenericArrayType genericArrayType,
+                                                        @NotNull Definition isDefinition, @NotNull PrintWriter out) {
+        printDependency(genericArrayType.getGenericComponentType(), out, isDefinition);
+        out.print("[] ");
+    }
+
+    private static void printInstanceOfTypeVariable(@NotNull TypeVariable<?> typeVariable,
+                                                    @NotNull Definition isDefinition, @NotNull PrintWriter out) {
+        out.print(typeVariable.getName());
+        if (isDefinition == Definition.YES) {
+            printDependencies(typeVariable.getBounds(), out,
+                    new Template("extends ", " ", " & "), Definition.NO);
+        }
+    }
+
+    private static void printDependencies(@NotNull Type[] types, @NotNull PrintWriter out,
+                                          @NotNull Template template, @NotNull Definition isDefinition) {
+        var listOfTypes = new ArrayList<Type>();
+
+        for (var type : types) {
+            if (type != Object.class) {
+                listOfTypes.add(type);
+            }
+        }
+
+        if (listOfTypes.size() == 0) {
             return;
         }
 
         boolean wasPrinted = false;
 
         out.print(template.prefix);
-        for (var type : types) {
+        for (var type : listOfTypes) {
             if (wasPrinted) {
                 out.print(template.separator);
             }
@@ -205,27 +229,27 @@ public class Reflector {
         out.print(template.suffix);
     }
 
-    private static void printConstructor(Constructor constructor, PrintWriter out, String className) {
+    private static void printConstructor(@NotNull Constructor constructor, @NotNull PrintWriter out) {
         out.print(Modifier.toString(constructor.getModifiers()) + " ");
         printDependencies(constructor.getTypeParameters(), out,
                 new Template("<", "> ", ", "), Definition.YES);
-        out.print(className + " (");
+        out.print(getSimpleName(constructor.getDeclaringClass()) + " (");
         printArguments(constructor.getGenericParameterTypes(), out);
         out.print(") ");
         printDependencies(constructor.getGenericExceptionTypes(), out,
-                new Template("throws ", "", ", "), Definition.NO);
-        printMethodBody(out);
+                new Template("throws ", " ",", "), Definition.NO);
+        out.print(" {}\n");
     }
 
-    private static void printConstructors(Constructor[] constructors, PrintWriter out, String className, int tabs) {
+    private static void printConstructors(@NotNull Constructor[] constructors, @NotNull PrintWriter out, int tabs) {
         for (var constructor : constructors) {
             printTabs(tabs, out);
-            printConstructor(constructor, out, className);
+            printConstructor(constructor, out);
             out.print("\n");
         }
     }
 
-    private static void printFields(Field[] fields, PrintWriter out, int tabs) {
+    private static void printFields(@NotNull Field[] fields, @NotNull PrintWriter out, int tabs) {
         for (var field : fields) {
             printTabs(tabs, out);
             printField(field, out);
@@ -233,7 +257,7 @@ public class Reflector {
         }
     }
 
-    private static void printField(Field field, PrintWriter out) {
+    private static void printField(@NotNull Field field, @NotNull PrintWriter out) {
         out.print(Modifier.toString(field.getModifiers()) + " ");
         printDependency(field.getGenericType(), out, Definition.NO);
         out.print(" " + field.getName());
@@ -245,7 +269,7 @@ public class Reflector {
         out.print(";\n");
     }
 
-    private static void printMethods(Method[] methods, PrintWriter out, int tabs) {
+    private static void printMethods(@NotNull Method[] methods, @NotNull PrintWriter out, int tabs) {
         for (var method : methods) {
             printTabs(tabs, out);
             printMethod(method, out);
@@ -253,7 +277,7 @@ public class Reflector {
         }
     }
 
-    private static void printMethod(Method method, PrintWriter out) {
+    private static void printMethod(@NotNull Method method, @NotNull PrintWriter out) {
         out.print(Modifier.toString(method.getModifiers()) + " ");
         printDependencies(method.getTypeParameters(), out,
                 new Template("<", "> ", ", "), Definition.NO);
@@ -262,10 +286,10 @@ public class Reflector {
         out.print(" ( ");
         printArguments(method.getGenericParameterTypes(), out);
         out.print(" ) ");
-        printMethodBody(out);
+        printMethodBody(method, out);
     }
 
-    private static void printTabs(int tabs, PrintWriter out) {
+    private static void printTabs(int tabs, @NotNull PrintWriter out) {
         for (int i = 0; i < tabs; i++) {
             for (int j = 0; j < SPACES_PER_TAB; j++) {
                 out.print(" ");
@@ -273,11 +297,18 @@ public class Reflector {
         }
     }
 
-    private static void printMethodBody(PrintWriter out) {
-        out.print("{ throw new NotImplementedException() }\n");
+    private static void printMethodBody(@NotNull Method method, @NotNull PrintWriter out) {
+        out.print("{ ");
+        if (!method.getGenericReturnType().getTypeName().equals("void")) {
+            out.print("return ");
+            printDefaultValue(method.getGenericReturnType(), out);
+            out.print(";");
+        }
+
+        out.print("}");
     }
 
-    private static void printArguments(Type[] types, PrintWriter out) {
+    private static void printArguments(@NotNull Type[] types, @NotNull PrintWriter out) {
         boolean wasPrinted = false;
         int counter = 1;
 
@@ -293,7 +324,7 @@ public class Reflector {
         }
     }
 
-    private static void printDefaultValue(Type type, PrintWriter out) {
+    private static void printDefaultValue(@NotNull Type type, @NotNull PrintWriter out) {
         if (!(type instanceof Class)) {
             out.print("null");
             return;
@@ -306,8 +337,36 @@ public class Reflector {
             return;
         }
 
+        if (clazz == char.class) {
+            out.print('0');
+            return;
+        }
+
+        if (clazz == float.class) {
+            out.print('0');
+            return;
+        }
+
         var arrayWithOneElement = Array.newInstance(clazz, 1);
 
         out.print(Array.get(arrayWithOneElement, 0).toString());
+    }
+
+    @NotNull private static String getSimpleName(@NotNull Class<?> clazz) {
+        return getSimpleName(clazz.getName(), currentPackage, clazz.isMemberClass());
+    }
+
+    @NotNull private static String getSimpleName(@NotNull String fullName,
+                                                 @NotNull String packageName, boolean isClassMember) {
+        String name = fullName;
+
+        if (!packageName.equals("") && fullName.contains(packageName)) {
+            name = fullName.substring(packageName.length() + 1);
+        }
+
+        if (isClassMember) {
+            name = name.substring(name.lastIndexOf('$') + 1);
+        }
+        return name;
     }
 }
