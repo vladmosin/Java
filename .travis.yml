@@ -7,5 +7,5 @@ env:
 - PROJECT_DIR=BinarySearchTree
 - PROJECT_DIR=Trie
 - PROJECT_DIR=HashMap
-- PROJECT_DIR=CW2
+- PROJECT_DIR=Injector
 script: cd $PROJECT_DIR && mvn test
