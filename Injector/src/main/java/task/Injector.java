@@ -1,5 +1,7 @@
 package task;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
@@ -12,16 +14,17 @@ import java.util.stream.Collectors;
 /**Class, which emulates container Dependency injection*/
 public class Injector {
     /**Stores already built objects*/
-    private static HashMap<Class<?>, Object> builtObjects = new HashMap<>();
+    @NotNull private static HashMap<Class<?>, Object> builtObjects = new HashMap<>();
 
     /**Stores used implementations*/
-    private static HashSet<Class<?>> usedImplementations = new HashSet<>();
+    @NotNull private static HashSet<Class<?>> usedImplementations = new HashSet<>();
 
     /**Initialize object of class with given name
      * @param rootClassName Name of object's type
      * @param implementationClassNames List of possible implementations
      * */
-    public static Object initialize(String rootClassName, List<String> implementationClassNames)
+    @NotNull
+    public static Object initialize(@NotNull String rootClassName, @NotNull List<String> implementationClassNames)
             throws InjectionCycleException, ClassNotFoundException,
             AmbiguousImplementationException, ImplementationNotFoundException,
             IllegalAccessException, InstantiationException, InvocationTargetException {
@@ -43,8 +46,11 @@ public class Injector {
      * @param implementationClasses List of possible implementations
      * @param isRoot True if building class is purpose
      * */
-    private static Object initialize(Class<?> clazz, List<Class<?>> implementationClasses, boolean isRoot)
-            throws InjectionCycleException, AmbiguousImplementationException, ImplementationNotFoundException, IllegalAccessException, InvocationTargetException, InstantiationException {
+    @NotNull
+    private static Object initialize(@NotNull Class<?> clazz,
+                                     @NotNull List<Class<?>> implementationClasses, boolean isRoot)
+            throws InjectionCycleException, AmbiguousImplementationException, ImplementationNotFoundException,
+            IllegalAccessException, InvocationTargetException, InstantiationException {
         if (builtObjects.containsKey(clazz)) {
             return builtObjects.get(clazz);
         }
@@ -81,7 +87,8 @@ public class Injector {
     }
 
     /**Initialize interface*/
-    private static Object initializeInterface(Class<?> clazz, List<Class<?>> implementationClasses)
+    @NotNull
+    private static Object initializeInterface(@NotNull Class<?> clazz, @NotNull List<Class<?>> implementationClasses)
             throws AmbiguousImplementationException, ImplementationNotFoundException,
             InjectionCycleException, IllegalAccessException, InstantiationException, InvocationTargetException {
         Class<?> implementation = findImplementation(clazz, implementationClasses);
@@ -90,7 +97,8 @@ public class Injector {
     }
 
     /**Finds possible implementation*/
-    private static Class<?> findImplementation(Class<?> clazz, List<Class<?>> implementationClasses)
+    @NotNull
+    private static Class<?> findImplementation(@NotNull Class<?> clazz, @NotNull List<Class<?>> implementationClasses)
             throws AmbiguousImplementationException, ImplementationNotFoundException {
         Class<?> possibleImplementation = null;
         for (var implementation : implementationClasses) {
@@ -113,7 +121,7 @@ public class Injector {
     }
 
     /**Checks if given class is interface or abstract class*/
-    private static boolean isInterfaceOrAbstractClass(Class<?> clazz) {
+    private static boolean isInterfaceOrAbstractClass(@NotNull Class<?> clazz) {
         int modifiers = clazz.getModifiers();
 
         return Modifier.isInterface(modifiers) || Modifier.isAbstract(modifiers);

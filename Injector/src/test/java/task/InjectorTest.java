@@ -11,22 +11,21 @@ import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-
 public class InjectorTest {
 
     @Test
-    public void injectorShouldInitializeClassWithoutDependencies()
-            throws Exception, ImplementationNotFoundException,
-            InjectionCycleException, AmbiguousImplementationException {
+    public void injectorShouldInitializeClassWithoutDependencies() throws ImplementationNotFoundException,
+            InjectionCycleException, AmbiguousImplementationException, ClassNotFoundException,
+            InvocationTargetException, InstantiationException, IllegalAccessException {
         Object object = Injector.initialize("task.testClasses.ClassWithoutDependencies",
                                              Collections.<String>emptyList());
         assertTrue(object instanceof ClassWithoutDependencies);
     }
 
     @Test
-    public void injectorShouldInitializeClassWithOneClassDependency()
-            throws Exception, ImplementationNotFoundException,
-            InjectionCycleException, AmbiguousImplementationException {
+    public void injectorShouldInitializeClassWithOneClassDependency() throws ImplementationNotFoundException,
+            InjectionCycleException, AmbiguousImplementationException, ClassNotFoundException,
+            InvocationTargetException, InstantiationException, IllegalAccessException {
         Object object = Injector.initialize(
                 "task.testClasses.ClassWithOneClassDependency",
                 Collections.singletonList("task.testClasses.ClassWithoutDependencies")
@@ -37,9 +36,9 @@ public class InjectorTest {
     }
 
     @Test
-    public void injectorShouldInitializeClassWithOneInterfaceDependency()
-            throws Exception, ImplementationNotFoundException,
-            InjectionCycleException, AmbiguousImplementationException {
+    public void injectorShouldInitializeClassWithOneInterfaceDependency() throws ImplementationNotFoundException,
+            InjectionCycleException, AmbiguousImplementationException, ClassNotFoundException,
+            InvocationTargetException, InstantiationException, IllegalAccessException {
         Object object = Injector.initialize(
                 "task.testClasses.ClassWithOneInterfaceDependency",
                 Collections.singletonList("task.testClasses.InterfaceImpl")
