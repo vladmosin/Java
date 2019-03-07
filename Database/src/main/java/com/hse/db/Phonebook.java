@@ -1,7 +1,6 @@
 package com.hse.db;
 
 import java.sql.SQLException;
-import java.sql.SQLOutput;
 import java.util.Scanner;
 
 /**Interactive program to work with database*/
