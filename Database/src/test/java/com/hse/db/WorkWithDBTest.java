@@ -1,20 +1,28 @@
 package com.hse.db;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.testng.annotations.AfterClass;
 
 import java.sql.SQLException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class WorkWithDBTest {
-    private WorkWithDB dbManager = new WorkWithDB();
+    private WorkWithDB dbManager = new WorkWithDB("testPhonebook");
 
     public WorkWithDBTest() throws SQLException, ClassNotFoundException {}
 
     @BeforeEach
-    public void clear() throws SQLException {
-        dbManager.clear();
+    public void clear() throws SQLException, ClassNotFoundException {
+        dbManager = new WorkWithDB("testPhonebook");
+    }
+
+    @AfterEach
+    public void dropTable() throws SQLException {
+        dbManager.dropTable();
     }
 
     @Test
@@ -97,10 +105,9 @@ class WorkWithDBTest {
         var list = dbManager.getAllRecords();
         var node = new PhonebookNode("mouse", "3421");
 
-        assertEquals(2, list.size());
+        assertEquals(1, list.size());
 
         assertEquals(node, list.get(0));
-        assertEquals(node, list.get(1));
     }
 
     @Test
