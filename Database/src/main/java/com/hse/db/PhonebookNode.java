@@ -1,22 +1,25 @@
 package com.hse.db;
 
+import org.jetbrains.annotations.NotNull;
+
 /**Stores phone and name*/
 public class PhonebookNode {
-    private String phone;
-    private String name;
+    @NotNull private final String phone;
+    @NotNull private final String name;
 
-    public PhonebookNode(String name, String phone) {
+    public PhonebookNode(@NotNull String name, @NotNull String phone) {
         this.name = name;
         this.phone = phone;
     }
 
     @Override
+    @NotNull
     public String toString() {
         return name + " | " + phone;
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@NotNull Object other) {
         if (other instanceof PhonebookNode) {
             return ((PhonebookNode)other).phone.equals(phone) &&
                    ((PhonebookNode)other).name.equals(name);

@@ -9,13 +9,13 @@ import java.sql.SQLException;
 import static org.junit.jupiter.api.Assertions.*;
 
 class WorkWithDBTest {
-    private WorkWithDB dbManager = new WorkWithDB("testPhonebook");
+    private WorkWithDB dbManager = new WorkWithDB("testDatabase");
 
     public WorkWithDBTest() throws SQLException, ClassNotFoundException {}
 
     @BeforeEach
     public void clear() throws SQLException, ClassNotFoundException {
-        dbManager = new WorkWithDB("testPhonebook");
+        dbManager = new WorkWithDB("testDatabase");
     }
 
     @AfterEach

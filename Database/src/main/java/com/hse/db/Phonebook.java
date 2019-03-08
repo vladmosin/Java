@@ -20,14 +20,14 @@ public class Phonebook {
 
     public static void main(String[] args) throws SQLException, ClassNotFoundException {
         Scanner in = new Scanner(System.in);
-        var dbManager = new WorkWithDB("phonebook");
+        var dbManager = new WorkWithDB("database");
 
         outputHelp();
 
         while (true) {
+            System.out.print("Input command (0 - 7): ");
             int command;
 
-            System.out.print("Input command (0 - 7): ");
             command = in.nextInt();
             if (command == 0) {
                 break;
