@@ -165,6 +165,14 @@ public class Reflector {
         try (var byteArrayOutputStream = new ByteArrayOutputStream();
              var out = new PrintStream(byteArrayOutputStream)) {
             printFullClass(clazz, out, 0);
+            out.println("//package " + clazz.getPackageName() + ";\n");
+            try (var outFile = new PrintStream(new File(className + ".java"))) {
+                imports.stream()
+                       .distinct()
+                       .forEach(value -> outFile.println("import " + value + ";"));
+                outFile.println();
+                outFile.print(byteArrayOutputStream.toString());
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -179,9 +187,16 @@ public class Reflector {
     private static void printFullClass(@NotNull Class<?> clazz, @NotNull PrintStream out, int tabs) {
         currentPackage = clazz.getPackageName();
         printTabs(tabs, out);
-        out.print(Modifier.toString(clazz.getModifiers()) + " class " + getSimpleName(clazz));
+
+        String modifiers = Modifier.toString(clazz.getModifiers());
+
+        if (modifiers.length() > 0) {
+            out.print(modifiers + " ");
+        }
+
+        out.print("class " + getSimpleName(clazz));
         printDependencies(clazz.getTypeParameters(), out,
-                new Template("<", ">", ", "), Definition.NO);
+                new Template("<", "> ", ", "), Definition.NO);
         if (clazz.getGenericSuperclass() != null && clazz.getGenericSuperclass() != Object.class) {
             out.print(" extends ");
             printDependency(clazz.getGenericSuperclass(), out, Definition.NO);
@@ -201,7 +216,8 @@ public class Reflector {
         printFields(Arrays.asList(clazz.getDeclaredFields()), out, tabs + 1);
         printMethods(Arrays.asList(clazz.getDeclaredMethods()), out, tabs + 1);
 
-        out.print("}");
+        printTabs(tabs, out);
+        out.print("}\n");
     }
 
     /**
@@ -261,7 +277,6 @@ public class Reflector {
     /** Prints instance of TypeVariable */
     private static void printInstanceOfTypeVariable(@NotNull TypeVariable<?> typeVariable,
                                                     @NotNull Definition isDefinition, @NotNull PrintStream out) {
-        imports.add(typeVariable.getName());
         out.print(typeVariable.getName());
         if (isDefinition == Definition.YES) {
             printDependencies(typeVariable.getBounds(), out,
@@ -306,7 +321,12 @@ public class Reflector {
 
     /** Prints constructor to PrintStream */
     private static void printConstructor(@NotNull Constructor constructor, @NotNull PrintStream out) {
-        out.print(Modifier.toString(constructor.getModifiers()) + " ");
+        String modifiers = Modifier.toString(constructor.getModifiers());
+
+        if (modifiers.length() > 0) {
+            out.print(modifiers + " ");
+        }
+
         printDependencies(constructor.getTypeParameters(), out,
                 new Template("<", "> ", ", "), Definition.YES);
         out.print(getSimpleName(constructor.getDeclaringClass()) + " (");
@@ -341,7 +361,12 @@ public class Reflector {
 
     /** Prints field */
     private static void printField(@NotNull Field field, @NotNull PrintStream out) {
-        out.print(Modifier.toString(field.getModifiers()) + " ");
+        String modifiers = Modifier.toString(field.getModifiers());
+
+        if (modifiers.length() > 0) {
+            out.print(modifiers + " ");
+        }
+
         printDependency(field.getGenericType(), out, Definition.NO);
         out.print(" " + field.getName());
         if (Modifier.isFinal(field.getModifiers())) {
@@ -365,7 +390,12 @@ public class Reflector {
 
     /** Prints method */
     private static void printMethod(@NotNull Method method, @NotNull PrintStream out) {
-        out.print(Modifier.toString(method.getModifiers()) + " ");
+        String modifiers = Modifier.toString(method.getModifiers());
+
+        if (modifiers.length() > 0) {
+            out.print(modifiers + " ");
+        }
+
         printDependencies(method.getTypeParameters(), out,
                 new Template("<", "> ", ", "), Definition.NO);
         printDependency(method.getGenericReturnType(), out, Definition.NO);
@@ -460,6 +490,11 @@ public class Reflector {
 
         if (isClassMember) {
             name = name.substring(name.lastIndexOf('$') + 1);
+        }
+
+        if (name.contains(".")) {
+            imports.add(name);
+            name = name.substring(name.lastIndexOf(".") + 1);
         }
         return name;
     }

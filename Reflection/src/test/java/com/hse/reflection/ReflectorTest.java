@@ -12,12 +12,38 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class TestPrimitiveTypes {
     int a;
     char b;
+}
+
+class TestDifferenceInGenericReturnType1 {
+    List<String> f() {return null;}
+}
+
+class TestDifferenceInGenericReturnType2 {
+    List<Integer> f() {return null;}
+}
+
+class TestPrimitivesDifferenceInName {
+    int c;
+    char b;
+}
+
+class TestPrimitivesDifferenceInType {
+    int a;
+    boolean b;
+}
+
+class TestPrimitivesDifferenceInModifiers {
+    public int a;
+    char b;
+}
+
+class TestImports {
+    List<String> list;
 }
 
 class TestFinalPrimitives {
@@ -35,6 +61,10 @@ class TestMethods {
     Integer first(int a, Integer b) { return a; }
     void emptyFunction() {}
     double max(Object o) { return 21.23; }
+}
+
+class TestDifferenceInGenericType {
+    List<Integer> list;
 }
 
 class TestArraysInFields {
@@ -164,6 +194,16 @@ class ReflectorTest {
     }
 
     @Test
+    void testImports() throws IOException, ClassNotFoundException {
+        testCompiledSourceEqual(TestImports.class);
+    }
+
+    @Test
+    void testDifferenceInGenericReturnType1() throws IOException, ClassNotFoundException {
+        testCompiledSourceEqual(TestDifferenceInGenericReturnType1.class);
+    }
+
+    @Test
     void testFinalPrimitives() throws IOException, ClassNotFoundException {
         testCompiledSourceEqual(TestFinalPrimitives.class);
     }
@@ -282,9 +322,71 @@ class ReflectorTest {
     void testFindDifference() throws IOException {
         try (var byteArrayOutputStream = new ByteArrayOutputStream();
              var out = new PrintStream(byteArrayOutputStream)) {
-            out.print("1");
             Reflector.diffClasses(TestInnerClasses.class, TestMethods.class, out);
             assertTrue(byteArrayOutputStream.size() > 0);
+        }
+    }
+
+    @Test
+    void testDifferenceInPrimitiveFieldNames() throws IOException {
+        try (var byteArrayOutputStream = new ByteArrayOutputStream();
+             var out = new PrintStream(byteArrayOutputStream)) {
+            Reflector.diffClasses(TestPrimitiveTypes.class, TestPrimitivesDifferenceInName.class, out);
+            String difference = byteArrayOutputStream.toString();
+
+            assertTrue(difference.contains("int a"));
+            assertTrue(difference.contains("int c"));
+            assertFalse(difference.contains("char b"));
+        }
+    }
+
+    @Test
+    void testDifferenceInPrimitiveType() throws IOException {
+        try (var byteArrayOutputStream = new ByteArrayOutputStream();
+             var out = new PrintStream(byteArrayOutputStream)) {
+            Reflector.diffClasses(TestPrimitiveTypes.class, TestPrimitivesDifferenceInType.class, out);
+            String difference = byteArrayOutputStream.toString();
+
+            assertTrue(difference.contains("boolean b"));
+            assertTrue(difference.contains("char b"));
+            assertFalse(difference.contains("int a"));
+        }
+    }
+
+    @Test
+    void testDifferenceInPrimitiveModifiers() throws IOException {
+        try (var byteArrayOutputStream = new ByteArrayOutputStream();
+             var out = new PrintStream(byteArrayOutputStream)) {
+            Reflector.diffClasses(TestPrimitiveTypes.class, TestPrimitivesDifferenceInModifiers.class, out);
+            String difference = byteArrayOutputStream.toString();
+
+            assertTrue(difference.contains("public int a"));
+            assertFalse(difference.contains("char b"));
+        }
+    }
+
+    @Test
+    void testDifferenceInGenericType() throws IOException {
+        try (var byteArrayOutputStream = new ByteArrayOutputStream();
+             var out = new PrintStream(byteArrayOutputStream)) {
+            Reflector.diffClasses(TestDifferenceInGenericType.class, TestImports.class, out);
+            String difference = byteArrayOutputStream.toString();
+
+            assertTrue(difference.contains("List<String>  list"));
+            assertTrue(difference.contains("List<Integer>  list"));
+        }
+    }
+
+    @Test
+    void testDifferenceInGenericReturnType() throws IOException {
+        try (var byteArrayOutputStream = new ByteArrayOutputStream();
+             var out = new PrintStream(byteArrayOutputStream)) {
+            Reflector.diffClasses(TestDifferenceInGenericReturnType1.class,
+                                  TestDifferenceInGenericReturnType2.class, out);
+            String difference = byteArrayOutputStream.toString();
+
+            assertTrue(difference.contains("List<String>  f (  ) { return null;}"));
+            assertTrue(difference.contains("List<Integer>  f (  ) { return null;}"));
         }
     }
 
@@ -310,6 +412,6 @@ class ReflectorTest {
         var binaryFile = new File(targetClass.getSimpleName() + ".class");
 
         binaryFile.delete();
-        //sourceFile.delete();
+        sourceFile.delete();
     }
 }
