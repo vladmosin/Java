@@ -1,27 +1,30 @@
 package com.hse.reflection;
 
 import org.jetbrains.annotations.NotNull;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
+
+import java.io.*;
 import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-/**Class for comparing classes and printing their inner structure*/
+/** Class for comparing classes and printing their inner structure */
 public class Reflector {
 
-    /**Number of spaces per one tab*/
+    /** Number of spaces per one tab */
     private static final int SPACES_PER_TAB = 4;
 
-    /**Current package*/
+    private static ArrayList<String> imports = new ArrayList<>();
+
+    /** Current package */
     @NotNull private static String currentPackage = "";
 
-    /**Enum for describing is given type definition*/
+    /** Enum for describing is given type definition */
     private enum Definition { YES, NO }
 
-    /**Structure for storing information for printing types*/
+    /** Structure for storing information for printing types */
     private static class Template {
         @NotNull private String prefix;
         @NotNull private String suffix;
@@ -34,43 +37,47 @@ public class Reflector {
         }
     }
 
-    /**Prints all different methods and fields in classes
-     * @param out PrintWriter to print information*/
-    public static void diffClasses(@NotNull Class<?> first, @NotNull Class<?> second, @NotNull PrintWriter out) {
+    /** Prints all different methods and fields in classes
+     * @param out PrintStream to print information */
+    public static void diffClasses(@NotNull Class<?> first, @NotNull Class<?> second, @NotNull PrintStream out) {
         var differentMethods = getDifferentMethods(first, second);
         var differentFields = getDifferentFields(first, second);
         printMethods(differentMethods, out, 0);
         printFields(differentFields, out, 0);
     }
 
-    /**Prints all different methods and fields in classes to console*/
+    /** Prints all different methods and fields in classes to console */
     public static void diffClasses(@NotNull Class<?> first, @NotNull Class<?> second) {
-        try (var out = new PrintWriter(System.out)) {
+        try (var byteArrayOutputStream =  new ByteArrayOutputStream();
+             var out = new PrintStream(System.out)) {
             diffClasses(first, second, out);
+            System.out.println(byteArrayOutputStream.toString());
+        } catch (IOException e) {
+            System.out.println("Something went wrong");
         }
     }
 
-    /**Returns array of methods which differ in classes*/
-    @NotNull private static Method[] getDifferentMethods(@NotNull Class<?> first, @NotNull Class<?> second) {
-        var firstMethods = first.getDeclaredMethods();
-        var secondMethods = second.getDeclaredMethods();
+    /** Returns array of methods which differ in classes */
+    @NotNull private static List<Method> getDifferentMethods(@NotNull Class<?> first, @NotNull Class<?> second) {
+        var firstMethods = Arrays.asList(first.getDeclaredMethods());
+        var secondMethods = Arrays.asList(second.getDeclaredMethods());
 
         return getDifferentMethods(firstMethods, secondMethods);
     }
 
-    /**Returns array of methods which differ in arrays*/
-    @NotNull private static Method[] getDifferentMethods(@NotNull Method[] firstMethods,
-                                                         @NotNull Method[] secondMethods) {
+    /** Returns array of methods which differ in arrays */
+    @NotNull private static List<Method> getDifferentMethods(@NotNull List<Method> firstMethods,
+                                                         @NotNull List<Method> secondMethods) {
         return Stream.concat(
-                Arrays.stream(firstMethods)
+                firstMethods.stream()
                       .filter(method -> !containsMethod(secondMethods, method)),
-                Arrays.stream(firstMethods)
-                      .filter(method -> !containsMethod(secondMethods, method)))
-                .toArray(Method[]::new);
+                secondMethods.stream()
+                      .filter(method -> !containsMethod(firstMethods, method)))
+                .collect(Collectors.toList());
     }
 
-    /**Checks if method contains in array*/
-    private static boolean containsMethod(@NotNull Method[] methods, @NotNull Method givenMethod) {
+    /** Checks if method contains in array */
+    private static boolean containsMethod(@NotNull List<Method> methods, @NotNull Method givenMethod) {
         for (var method : methods) {
             if (methodsEqual(method, givenMethod)) {
                 return true;
@@ -80,34 +87,59 @@ public class Reflector {
         return false;
     }
 
-    /**Returns true if methods are the same*/
+    /** Returns true if methods are the same */
     private static boolean methodsEqual(@NotNull Method first, @NotNull Method second) {
         return first.getName().equals(second.getName()) &&
-               first.getGenericReturnType().equals(second.getGenericReturnType()) &&
+               checkTypeEquality(first.getGenericReturnType(), second.getGenericReturnType()) &&
                first.getModifiers() == second.getModifiers() &&
-               Arrays.equals(first.getParameterTypes(), second.getParameterTypes());
+               Arrays.equals(first.getParameterTypes(), second.getParameterTypes(), Reflector::compareTypes);
     }
 
-    /**Returns array of fields which differ in classes*/
-    @NotNull private static Field[] getDifferentFields(@NotNull Class<?> first, @NotNull Class<?> second) {
-        var firstFields = first.getDeclaredFields();
-        var secondFields = second.getDeclaredFields();
+    private static boolean checkTypeEquality(Type first, Type second) {
+        try (var byteArrayOutputStream1 = new ByteArrayOutputStream();
+             var byteArrayOutputStream2 = new ByteArrayOutputStream();
+             var out1 = new PrintStream(byteArrayOutputStream1);
+             var out2 = new PrintStream(byteArrayOutputStream2)) {
+                 printDependency(first, out1, Definition.NO);
+                 printDependency(second, out2, Definition.NO);
+
+                 boolean fl = Arrays.equals(byteArrayOutputStream1.toByteArray(), byteArrayOutputStream2.toByteArray());
+                 return fl;
+             } catch (IOException e) {
+            return false;
+        }
+    }
+
+    /** Compares types */
+    private static int compareTypes(Type first, Type second) {
+        if (checkTypeEquality(first, second)) {
+            return 0;
+        }
+
+        return -1;
+    }
+
+    /** Returns array of fields which differ in classes */
+    @NotNull private static List<Field> getDifferentFields(@NotNull Class<?> first, @NotNull Class<?> second) {
+        var firstFields = Arrays.asList(first.getDeclaredFields());
+        var secondFields = Arrays.asList(second.getDeclaredFields());
 
         return getDifferentFields(firstFields, secondFields);
     }
 
-    /**Returns array of fields which differ in arrays*/
-    @NotNull private static Field[] getDifferentFields(@NotNull Field[] firstFields, @NotNull Field[] secondFields) {
+    /** Returns array of fields which differ in arrays */
+    @NotNull private static List<Field> getDifferentFields(@NotNull List<Field> firstFields,
+                                                           @NotNull List<Field> secondFields) {
         return Stream.concat(
-                Arrays.stream(firstFields)
+                firstFields.stream()
                         .filter(field -> !containsField(secondFields, field)),
-                Arrays.stream(firstFields)
-                        .filter(field -> !containsField(secondFields, field)))
-                .toArray(Field[]::new);
+                secondFields.stream()
+                        .filter(field -> !containsField(firstFields, field)))
+                .collect(Collectors.toList());
     }
 
-    /**Checks if field contains in array*/
-    private static boolean containsField(@NotNull Field[] fields, @NotNull Field givenField) {
+    /** Checks if field contains in array */
+    private static boolean containsField(@NotNull List<Field> fields, @NotNull Field givenField) {
         for (var field : fields) {
             if (fieldsEqual(field, givenField)) {
                 return true;
@@ -117,29 +149,34 @@ public class Reflector {
         return false;
     }
 
-    /**Returns true if fields are the same*/
+    /** Returns true if fields are the same */
     private static boolean fieldsEqual(@NotNull Field first, @NotNull Field second) {
         return first.getName().equals(second.getName()) &&
-               first.getGenericType().equals(second.getGenericType()) &&
+               checkTypeEquality(first.getGenericType(), second.getGenericType()) &&
                first.getModifiers() == second.getModifiers();
     }
 
-    /**Prints class structure to file "className.java"*/
+    /** Prints class structure to file "className.java" */
     public static void printStructure(@NotNull Class<?> clazz) throws FileNotFoundException {
         String className = clazz.getSimpleName();
 
-        try (var out = new PrintWriter(new File(className + ".java"))) {
+        imports.clear();
+
+        try (var byteArrayOutputStream = new ByteArrayOutputStream();
+             var out = new PrintStream(byteArrayOutputStream)) {
             printFullClass(clazz, out, 0);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
     /**
-     * Prints class to PrintWriter
+     * Prints class to PrintStream
      * @param clazz Class to print
-     * @param out PrintWriter to print class
+     * @param out PrintStream to print class
      * @param tabs Distance in tabs from left side of screen to class declaration
      * */
-    private static void printFullClass(@NotNull Class<?> clazz, @NotNull PrintWriter out, int tabs) {
+    private static void printFullClass(@NotNull Class<?> clazz, @NotNull PrintStream out, int tabs) {
         currentPackage = clazz.getPackageName();
         printTabs(tabs, out);
         out.print(Modifier.toString(clazz.getModifiers()) + " class " + getSimpleName(clazz));
@@ -161,18 +198,18 @@ public class Reflector {
         }
 
         printConstructors(clazz.getDeclaredConstructors(), out, tabs + 1);
-        printFields(clazz.getDeclaredFields(), out, tabs + 1);
-        printMethods(clazz.getDeclaredMethods(), out, tabs + 1);
+        printFields(Arrays.asList(clazz.getDeclaredFields()), out, tabs + 1);
+        printMethods(Arrays.asList(clazz.getDeclaredMethods()), out, tabs + 1);
 
         out.print("}");
     }
 
     /**
-     * Prints type information to PrintWriter
+     * Prints type information to PrintStream
      * @param type Type information about which should be printed
      * @param isDefinition YES for definition and NO for usage
      * */
-    private static void printDependency(@NotNull Type type, @NotNull PrintWriter out,
+    private static void printDependency(@NotNull Type type, @NotNull PrintStream out,
                                         @NotNull Definition isDefinition) {
         if (type instanceof Class) {
             printInstanceOfClass((Class<?>) type, out);
@@ -187,8 +224,8 @@ public class Reflector {
         }
     }
 
-    /**Prints instance of class*/
-    private static void printInstanceOfClass(@NotNull Class<?> clazz, @NotNull PrintWriter out) {
+    /** Prints instance of class */
+    private static void printInstanceOfClass(@NotNull Class<?> clazz, @NotNull PrintStream out) {
         if (clazz.isArray()) {
             printDependency(clazz.getComponentType(), out, Definition.NO);
             out.print("[] ");
@@ -197,8 +234,8 @@ public class Reflector {
         }
     }
 
-    /**Prints instance of WildcardType*/
-    private static void printInstanceOfWildCardType(@NotNull WildcardType wildcardType, @NotNull PrintWriter out) {
+    /** Prints instance of WildcardType */
+    private static void printInstanceOfWildCardType(@NotNull WildcardType wildcardType, @NotNull PrintStream out) {
         out.print("? ");
         printDependencies(wildcardType.getLowerBounds(), out,
                 new Template("super ", " ", " & "), Definition.NO);
@@ -206,24 +243,25 @@ public class Reflector {
                 new Template("extends ", " ", " & "), Definition.NO);
     }
 
-    /**Prints instance of ParameterizedType*/
+    /** Prints instance of ParameterizedType */
     private static void printInstanceOfParameterizedType(@NotNull ParameterizedType parameterizedType,
-                                                         @NotNull PrintWriter out) {
+                                                         @NotNull PrintStream out) {
         printDependency(parameterizedType.getRawType(), out, Definition.NO);
         printDependencies(parameterizedType.getActualTypeArguments(), out,
                 new Template("<", "> ", ", "), Definition.NO);
     }
 
-    /**Prints instance of GenericArrayType*/
+    /** Prints instance of GenericArrayType */
     private static void printInstanceOfGenericArrayType(@NotNull GenericArrayType genericArrayType,
-                                                        @NotNull Definition isDefinition, @NotNull PrintWriter out) {
+                                                        @NotNull Definition isDefinition, @NotNull PrintStream out) {
         printDependency(genericArrayType.getGenericComponentType(), out, isDefinition);
         out.print("[] ");
     }
 
-    /**Prints instance of TypeVariable*/
+    /** Prints instance of TypeVariable */
     private static void printInstanceOfTypeVariable(@NotNull TypeVariable<?> typeVariable,
-                                                    @NotNull Definition isDefinition, @NotNull PrintWriter out) {
+                                                    @NotNull Definition isDefinition, @NotNull PrintStream out) {
+        imports.add(typeVariable.getName());
         out.print(typeVariable.getName());
         if (isDefinition == Definition.YES) {
             printDependencies(typeVariable.getBounds(), out,
@@ -237,7 +275,7 @@ public class Reflector {
      * @param types Array of types
      * @param template Stores beginning, separator between types and ending
      * */
-    private static void printDependencies(@NotNull Type[] types, @NotNull PrintWriter out,
+    private static void printDependencies(@NotNull Type[] types, @NotNull PrintStream out,
                                           @NotNull Template template, @NotNull Definition isDefinition) {
         var listOfTypes = new ArrayList<Type>();
 
@@ -266,8 +304,8 @@ public class Reflector {
         out.print(template.suffix);
     }
 
-    /**Prints constructor to PrintWriter*/
-    private static void printConstructor(@NotNull Constructor constructor, @NotNull PrintWriter out) {
+    /** Prints constructor to PrintStream */
+    private static void printConstructor(@NotNull Constructor constructor, @NotNull PrintStream out) {
         out.print(Modifier.toString(constructor.getModifiers()) + " ");
         printDependencies(constructor.getTypeParameters(), out,
                 new Template("<", "> ", ", "), Definition.YES);
@@ -279,10 +317,10 @@ public class Reflector {
         out.print(" {}\n");
     }
 
-    /**Prints array of constructors
+    /** Prints array of constructors
      * @param tabs Distance in tabs between left side of screen and constructor
      * */
-    private static void printConstructors(@NotNull Constructor[] constructors, @NotNull PrintWriter out, int tabs) {
+    private static void printConstructors(@NotNull Constructor[] constructors, @NotNull PrintStream out, int tabs) {
         for (var constructor : constructors) {
             printTabs(tabs, out);
             printConstructor(constructor, out);
@@ -290,10 +328,10 @@ public class Reflector {
         }
     }
 
-    /**Prints array of fields
+    /** Prints array of fields
      * @param tabs Distance in tabs between left side of screen and field
      * */
-    private static void printFields(@NotNull Field[] fields, @NotNull PrintWriter out, int tabs) {
+    private static void printFields(@NotNull List<Field> fields, @NotNull PrintStream out, int tabs) {
         for (var field : fields) {
             printTabs(tabs, out);
             printField(field, out);
@@ -301,8 +339,8 @@ public class Reflector {
         }
     }
 
-    /**Prints field*/
-    private static void printField(@NotNull Field field, @NotNull PrintWriter out) {
+    /** Prints field */
+    private static void printField(@NotNull Field field, @NotNull PrintStream out) {
         out.print(Modifier.toString(field.getModifiers()) + " ");
         printDependency(field.getGenericType(), out, Definition.NO);
         out.print(" " + field.getName());
@@ -314,10 +352,10 @@ public class Reflector {
         out.print(";\n");
     }
 
-    /**Prints array of methods
+    /** Prints array of methods
      * @param tabs Distance in tabs between left side of screen and method
      * */
-    private static void printMethods(@NotNull Method[] methods, @NotNull PrintWriter out, int tabs) {
+    private static void printMethods(@NotNull List<Method> methods, @NotNull PrintStream out, int tabs) {
         for (var method : methods) {
             printTabs(tabs, out);
             printMethod(method, out);
@@ -325,12 +363,12 @@ public class Reflector {
         }
     }
 
-    /**Prints method*/
-    private static void printMethod(@NotNull Method method, @NotNull PrintWriter out) {
+    /** Prints method */
+    private static void printMethod(@NotNull Method method, @NotNull PrintStream out) {
         out.print(Modifier.toString(method.getModifiers()) + " ");
         printDependencies(method.getTypeParameters(), out,
                 new Template("<", "> ", ", "), Definition.NO);
-        printDependency(method.getReturnType(), out, Definition.NO);
+        printDependency(method.getGenericReturnType(), out, Definition.NO);
         out.print(" " + method.getName());
         out.print(" ( ");
         printArguments(method.getGenericParameterTypes(), out);
@@ -338,8 +376,8 @@ public class Reflector {
         printMethodBody(method, out);
     }
 
-    /**Prints tabs*/
-    private static void printTabs(int tabs, @NotNull PrintWriter out) {
+    /** Prints tabs */
+    private static void printTabs(int tabs, @NotNull PrintStream out) {
         for (int i = 0; i < tabs; i++) {
             for (int j = 0; j < SPACES_PER_TAB; j++) {
                 out.print(" ");
@@ -347,9 +385,9 @@ public class Reflector {
         }
     }
 
-    /**Prints body for method, given as argument.
-     * For returning type void method body is empty, for others is default value*/
-    private static void printMethodBody(@NotNull Method method, @NotNull PrintWriter out) {
+    /** Prints body for method, given as argument.
+     * For returning type void method body is empty, for others is default value */
+    private static void printMethodBody(@NotNull Method method, @NotNull PrintStream out) {
         out.print("{ ");
         if (!method.getGenericReturnType().getTypeName().equals("void")) {
             out.print("return ");
@@ -360,8 +398,8 @@ public class Reflector {
         out.print("}");
     }
 
-    /**Prints function arguments*/
-    private static void printArguments(@NotNull Type[] types, @NotNull PrintWriter out) {
+    /** Prints function arguments */
+    private static void printArguments(@NotNull Type[] types, @NotNull PrintStream out) {
         boolean wasPrinted = false;
         int counter = 1;
 
@@ -377,8 +415,8 @@ public class Reflector {
         }
     }
 
-    /**Prints default value*/
-    private static void printDefaultValue(@NotNull Type type, @NotNull PrintWriter out) {
+    /** Prints default value */
+    private static void printDefaultValue(@NotNull Type type, @NotNull PrintStream out) {
         if (!(type instanceof Class)) {
             out.print("null");
             return;
@@ -406,12 +444,12 @@ public class Reflector {
         out.print(Array.get(arrayWithOneElement, 0).toString());
     }
 
-    /**Returns simple name without package*/
+    /** Returns simple name without package */
     @NotNull private static String getSimpleName(@NotNull Class<?> clazz) {
         return getSimpleName(clazz.getName(), currentPackage, clazz.isMemberClass());
     }
 
-    /**Returns simple name without package*/
+    /** Returns simple name without package */
     @NotNull private static String getSimpleName(@NotNull String fullName,
                                                  @NotNull String packageName, boolean isClassMember) {
         String name = fullName;

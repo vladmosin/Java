@@ -1,6 +1,5 @@
 package com.hse.reflection;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import javax.tools.JavaCompiler;
@@ -12,9 +11,9 @@ import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.function.BiPredicate;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TestPrimitiveTypes {
     int a;
@@ -104,12 +103,10 @@ class TestImplements implements Runnable, Comparable {
 }
 
 class TestExtendsAndImplements extends AbstractMap implements Comparable {
-    @Override
-    public int compareTo(@NotNull Object o) {
+    public int compareTo(Object o) {
         return 0;
     }
-
-    @Override
+    
     public Set<Entry> entrySet() {
         return null;
     }
@@ -266,6 +263,31 @@ class ReflectorTest {
         testCompiledSourceEqual(TestWildcardInArgs.class);
     }
 
+    @Test
+    void testDiffOnEqualClasses() throws IOException {
+        try (var byteArrayOutputStream = new ByteArrayOutputStream();
+             var out = new PrintStream(byteArrayOutputStream)) {
+            Reflector.diffClasses(TestWildcardInArgs.class, TestWildcardInArgs.class, out);
+            assertEquals(0, byteArrayOutputStream.size());
+        }
+
+        try (var byteArrayOutputStream = new ByteArrayOutputStream();
+             var out = new PrintStream(byteArrayOutputStream)) {
+            Reflector.diffClasses(TestPrimitiveTypes.class, TestPrimitiveTypes.class, out);
+            assertEquals(0, byteArrayOutputStream.size());
+        }
+    }
+
+    @Test
+    void testFindDifference() throws IOException {
+        try (var byteArrayOutputStream = new ByteArrayOutputStream();
+             var out = new PrintStream(byteArrayOutputStream)) {
+            out.print("1");
+            Reflector.diffClasses(TestInnerClasses.class, TestMethods.class, out);
+            assertTrue(byteArrayOutputStream.size() > 0);
+        }
+    }
+
     private void testCompiledSourceEqual(Class<?> targetClass) throws IOException,
             ClassNotFoundException {
         Reflector.printStructure(targetClass);
@@ -280,7 +302,7 @@ class ReflectorTest {
         var loadedClass = Class.forName(targetClass.getSimpleName(), true, classLoader);
 
         try (var byteArrayOutputStream = new ByteArrayOutputStream();
-             var out = new PrintWriter(byteArrayOutputStream)) {
+             var out = new PrintStream(byteArrayOutputStream)) {
             Reflector.diffClasses(targetClass, loadedClass, out);
             assertEquals(0, byteArrayOutputStream.size());
         }
@@ -288,6 +310,6 @@ class ReflectorTest {
         var binaryFile = new File(targetClass.getSimpleName() + ".class");
 
         binaryFile.delete();
-        sourceFile.delete();
+        //sourceFile.delete();
     }
 }
