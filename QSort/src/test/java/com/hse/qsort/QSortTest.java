@@ -1,13 +1,12 @@
 package com.hse.qsort;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Random;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class QSortTest {
     private void fillList(int seed, int size, @NotNull ArrayList<Integer> list) {

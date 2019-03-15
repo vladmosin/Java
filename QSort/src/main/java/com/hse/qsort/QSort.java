@@ -1,10 +1,12 @@
 package com.hse.qsort;
 
 import org.jetbrains.annotations.NotNull;
-
-import java.sql.Array;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Random;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.RecursiveAction;
 
 /** Implements quickSort */
 public class QSort {
