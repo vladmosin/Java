@@ -44,9 +44,7 @@ public class ThreadPool {
         public void run() {
             while(!Thread.interrupted()) {
                 try {
-                    tasks.get().get();
-                } catch (LightExecutionException e) {
-                    lightExecutionExceptions.add(e);
+                    tasks.get().makeTask();
                 } catch (InterruptedException ignored) {
                 }
             }
@@ -56,14 +54,26 @@ public class ThreadPool {
     public class TaskHolder<T> implements LightFuture<T> {
         @Nullable private Supplier<T> supplier;
         @Nullable private T result;
+        @Nullable Exception exception;
 
         @Override
         synchronized public boolean isReady() {
             return supplier == null;
         }
 
-        @Override
-        public T get() throws LightExecutionException {
+        public synchronized T get() throws InterruptedException, LightExecutionException {
+            while (!isReady()) {
+                wait();
+            }
+
+            if (exception != null) {
+                throw new LightExecutionException(exception);
+            }
+
+            return result;
+        }
+
+        public void makeTask() {
             try {
                 if (supplier != null) {
                     synchronized (this) {
@@ -73,9 +83,9 @@ public class ThreadPool {
                         }
                     }
                 }
-                return result;
+                notifyAll();
             } catch (Exception e) {
-                throw new LightExecutionException(e.getMessage());
+                exception = e;
             }
         }
 
@@ -95,9 +105,8 @@ public class ThreadPool {
             return ThreadPool.this.submit(task);
         }
 
-        public TaskHolder(@NotNull Supplier<T> supplier) {
+        private TaskHolder(@NotNull Supplier<T> supplier) {
             this.supplier = supplier;
         }
     }
-
 }
