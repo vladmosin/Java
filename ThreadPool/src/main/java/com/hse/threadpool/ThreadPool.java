@@ -10,7 +10,8 @@ import java.util.function.Supplier;
 public class ThreadPool {
     @NotNull private final MultithreadedQueue<LightFuture<?>> tasks = new MultithreadedQueue<>();
     @NotNull private final ArrayList<Thread> threads = new ArrayList<>();
-    @NotNull private final ArrayList<LightExecutionException> lightExecutionExceptions = new ArrayList<>();
+    @NotNull private final MultithreadedArrayList<LightExecutionException> lightExecutionExceptions =
+            new MultithreadedArrayList<>();
 
     public ThreadPool(int numberOfThreads) {
         for (int i = 0; i < numberOfThreads; i++) {
@@ -25,12 +26,15 @@ public class ThreadPool {
         }
     }
 
+    @NotNull
+    public ArrayList<LightExecutionException> getHappenedException() {
+        return lightExecutionExceptions.getArrayList();
+    }
+
+    @NotNull
     public <T> LightFuture<T> submit(@NotNull Supplier<T> task) {
         var lightFuture = new TaskHolder<>(task);
-        synchronized (tasks) {
-            tasks.add(lightFuture);
-            notify();
-        }
+        tasks.add(lightFuture);
 
         return lightFuture;
     }
@@ -49,7 +53,7 @@ public class ThreadPool {
         }
     }
 
-    private class TaskHolder<T> implements LightFuture<T> {
+    public class TaskHolder<T> implements LightFuture<T> {
         @Nullable private Supplier<T> supplier;
         @Nullable private T result;
 
@@ -76,6 +80,7 @@ public class ThreadPool {
         }
 
         @Override
+        @NotNull
         synchronized public <U> LightFuture<U> thenApply(@NotNull Function<T, U> applyingFunction) {
             var task = new Supplier<U>() {
                 @Override
