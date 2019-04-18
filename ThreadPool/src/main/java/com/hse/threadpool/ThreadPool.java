@@ -10,8 +10,7 @@ import java.util.function.Supplier;
 public class ThreadPool {
     @NotNull private final MultithreadedQueue<LightFuture<?>> tasks = new MultithreadedQueue<>();
     @NotNull private final ArrayList<Thread> threads = new ArrayList<>();
-    @NotNull private final MultithreadedArrayList<LightExecutionException> lightExecutionExceptions =
-            new MultithreadedArrayList<>();
+    private volatile boolean isShutdown = false;
 
     public ThreadPool(int numberOfThreads) {
         for (int i = 0; i < numberOfThreads; i++) {
@@ -20,21 +19,19 @@ public class ThreadPool {
         }
     }
 
-    public void shutdown() {
+    public synchronized void shutdown() {
+        isShutdown = true;
         for (var thread : threads) {
             thread.interrupt();
         }
     }
 
     @NotNull
-    public ArrayList<LightExecutionException> getHappenedException() {
-        return lightExecutionExceptions.getArrayList();
-    }
-
-    @NotNull
     public <T> LightFuture<T> submit(@NotNull Supplier<T> task) {
         var lightFuture = new TaskHolder<>(task);
-        tasks.add(lightFuture);
+        if (!isShutdown) {
+            tasks.add(lightFuture);
+        }
 
         return lightFuture;
     }
@@ -52,13 +49,14 @@ public class ThreadPool {
     }
 
     public class TaskHolder<T> implements LightFuture<T> {
-        @Nullable private Supplier<T> supplier;
+        @NotNull private Supplier<T> supplier;
         @Nullable private T result;
         @Nullable Exception exception;
+        private boolean isReady = false;
 
         @Override
         synchronized public boolean isReady() {
-            return supplier == null;
+            return isReady;
         }
 
         public synchronized T get() throws InterruptedException, LightExecutionException {
@@ -73,20 +71,17 @@ public class ThreadPool {
             return result;
         }
 
-        public void makeTask() {
+        synchronized public void makeTask() {
             try {
-                if (supplier != null) {
-                    synchronized (this) {
-                        if (supplier != null) {
-                            result = supplier.get();
-                            supplier = null;
-                        }
-                    }
+                if (!isReady) {
+                    result = supplier.get();
+                    isReady = true;
                 }
-                notifyAll();
             } catch (Exception e) {
                 exception = e;
+                isReady = true;
             }
+            notifyAll();
         }
 
         @Override
