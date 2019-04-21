@@ -68,7 +68,7 @@ public class ThreadPool {
         @Nullable private T result;
 
         /** Stores exception if it was thrown */
-        @Nullable Exception exception;
+        @Nullable private Exception exception;
 
         private volatile boolean isReady = false;
 
