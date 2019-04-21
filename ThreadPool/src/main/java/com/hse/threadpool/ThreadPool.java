@@ -19,7 +19,7 @@ public class ThreadPool {
         }
     }
 
-    public synchronized void shutdown() {
+    public void shutdown() {
         isShutdown = true;
         for (var thread : threads) {
             thread.interrupt();
@@ -49,13 +49,14 @@ public class ThreadPool {
     }
 
     public class TaskHolder<T> implements LightFuture<T> {
-        @NotNull private Supplier<T> supplier;
+        @NotNull private final Supplier<T> supplier;
         @Nullable private T result;
         @Nullable Exception exception;
-        private boolean isReady = false;
+        private volatile boolean isReady = false;
+        @NotNull private final ArrayList<TaskHolder<?>> waitingTasks = new ArrayList<>();
 
         @Override
-        synchronized public boolean isReady() {
+        public boolean isReady() {
             return isReady;
         }
 
@@ -71,7 +72,7 @@ public class ThreadPool {
             return result;
         }
 
-        synchronized public void makeTask() {
+         synchronized public void makeTask() {
             try {
                 if (!isReady) {
                     result = supplier.get();
@@ -80,8 +81,9 @@ public class ThreadPool {
             } catch (Exception e) {
                 exception = e;
                 isReady = true;
+            } finally {
+                notifyAll();
             }
-            notifyAll();
         }
 
         @Override
@@ -91,6 +93,9 @@ public class ThreadPool {
                 @Override
                 public U get() {
                     try {
+                        while (!isReady()) {
+                            wait();
+                        }
                         return applyingFunction.apply(TaskHolder.this.get());
                     } catch (Exception exception) {
                         throw new RuntimeException("Cannot apply function", exception);
