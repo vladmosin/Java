@@ -30,6 +30,14 @@ class ThreadPoolTest {
         return result;
     }
 
+    private Double infiniteLoop() {
+        double result = 14;
+        while (result != 2) {
+            result = Math.cos(result);
+        }
+        return result;
+    }
+
     @Test
     void testWithOneThread() throws InterruptedException, LightExecutionException {
         var threadPool = new ThreadPool(1);
@@ -104,5 +112,29 @@ class ThreadPoolTest {
         var task = threadPool.submit(this::calculateSum).thenApply(j -> j + j);
 
         assertEquals(90, (int)task.get());
+    }
+
+    @Test
+    void testExactNumberOfThreadsNotMore() throws InterruptedException {
+        var threadPool = new ThreadPool(4);
+        for (int i = 0; i < 4; i++) {
+            threadPool.submit(this::infiniteLoop);
+        }
+        var task = threadPool.submit(this::calculateSum);
+        Thread.sleep(1000);
+
+        assertFalse(task.isReady());
+    }
+
+    @Test
+    void testExactNumberOfThreadsEnough() throws InterruptedException {
+        var threadPool = new ThreadPool(4);
+        for (int i = 0; i < 3; i++) {
+            threadPool.submit(this::infiniteLoop);
+        }
+        var task = threadPool.submit(this::calculateSum);
+        Thread.sleep(1000);
+
+        assertTrue(task.isReady());
     }
 }

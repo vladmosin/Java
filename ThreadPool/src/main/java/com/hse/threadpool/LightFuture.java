@@ -2,9 +2,10 @@ package com.hse.threadpool;
 
 import java.util.function.Function;
 
+/** Interface for objects which are returned from thread pool */
 public interface LightFuture<T> {
-    public boolean isReady();
-    public T get() throws LightExecutionException, InterruptedException;
-    public <U> LightFuture<U> thenApply(Function<T, U> changeResult);
-    public void makeTask();
+    boolean isReady();
+    T get() throws LightExecutionException, InterruptedException;
+    <U> LightFuture<U> thenApply(Function<T, U> changeResult);
+    void makeTask();
 }
