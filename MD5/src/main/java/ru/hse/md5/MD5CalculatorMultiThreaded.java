@@ -63,7 +63,7 @@ public class MD5CalculatorMultiThreaded {
                     var listTasks = new ArrayList<MD5Task>();
 
                     for (var file : listFiles) {
-                        var task = new MD5Task(directory);
+                        var task = new MD5Task(file);
 
                         listTasks.add(task);
                         task.fork();

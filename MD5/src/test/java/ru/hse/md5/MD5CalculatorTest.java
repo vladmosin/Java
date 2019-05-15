@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -84,5 +85,33 @@ public class MD5CalculatorTest {
     @Test
     public void testDirectoryWithOneFileMultiThreaded() throws FileNotFoundException, NoSuchAlgorithmException, MD5Exception {
         testDirectoryWithOneFile(3);
+    }
+
+    private void testBigFile(int numberOfThreads) throws IOException, MD5Exception, NoSuchAlgorithmException {
+        var temporaryFile = File.createTempFile("tempFile", ".tmp");
+        var printer = new PrintWriter(temporaryFile);
+
+        for (int i = 0; i < 10000; i++) {
+            printer.print("goenrgbnrgvekgmo");
+        }
+
+        temporaryFile.deleteOnExit();
+        checkFile(temporaryFile, numberOfThreads);
+    }
+
+    @Test
+    public void testBigFileSingleThreaded() throws FileNotFoundException, NoSuchAlgorithmException, MD5Exception {
+        testDirectoryWithOneFile(0);
+    }
+
+    @Test
+    public void testBigFileMultiThreaded() throws FileNotFoundException, NoSuchAlgorithmException, MD5Exception {
+        testDirectoryWithOneFile(3);
+    }
+
+    @Test
+    public void testEqualBehaviour() throws FileNotFoundException, NoSuchAlgorithmException, MD5Exception {
+        assertArrayEquals(MD5Calculator.calculateMultiThreaded(new File("src/test/TestDirectory"), 4),
+                          MD5Calculator.calculateSingleThreaded(new File("src/test/TestDirectory")));
     }
 }
