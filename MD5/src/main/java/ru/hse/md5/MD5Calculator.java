@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.security.NoSuchAlgorithmException;
 
+/** Implements md5 both multithreaded and singlethreaded */
 public class MD5Calculator {
     public static byte[] calculateSingleThreaded(@NotNull File directory)
             throws FileNotFoundException, NoSuchAlgorithmException, MD5Exception {

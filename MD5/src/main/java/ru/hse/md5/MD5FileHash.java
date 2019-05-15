@@ -9,6 +9,7 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+/** Utility to hash single file */
 public class MD5FileHash {
     @SuppressWarnings("StatementWithEmptyBody")
     public static byte[] hashFile(@NotNull File file) throws NoSuchAlgorithmException, MD5Exception {

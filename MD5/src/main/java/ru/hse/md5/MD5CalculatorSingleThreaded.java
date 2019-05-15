@@ -7,12 +7,9 @@ import java.io.FileNotFoundException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+/** Singlethreaded implementation of MD5 */
 public class MD5CalculatorSingleThreaded {
-    public byte[] calculate(@NotNull String directoryName) throws MD5Exception, NoSuchAlgorithmException, FileNotFoundException {
-        var directory = new File(directoryName);
-        return calculate(directory);
-    }
-
+     /** Calculates hash */
     public byte[] calculate(@NotNull File directory) throws FileNotFoundException, MD5Exception, NoSuchAlgorithmException {
         if (!directory.exists()) {
             throw new FileNotFoundException("File was not found");

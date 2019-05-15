@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
 
+/** Multithreaded implementation of MD5 */
 public class MD5CalculatorMultiThreaded {
     @NotNull private ArrayList<Exception> listExceptions = new ArrayList<Exception>();
     @NotNull private ForkJoinPool pool;
@@ -26,6 +27,7 @@ public class MD5CalculatorMultiThreaded {
         return listExceptions;
     }
 
+    /** Calculates hash */
     public byte[] calculate(@NotNull File directory) throws MD5Exception {
         var result = pool.invoke(new MD5Task(directory));
 
@@ -36,6 +38,7 @@ public class MD5CalculatorMultiThreaded {
         }
     }
 
+    /** Task for pool */
     private class MD5Task extends RecursiveTask<byte[]> {
         @NotNull private File directory;
 
