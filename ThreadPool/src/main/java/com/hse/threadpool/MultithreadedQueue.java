@@ -1,5 +1,7 @@
 package com.hse.threadpool;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayDeque;
 import java.util.Queue;
 
@@ -8,21 +10,20 @@ import java.util.Queue;
  * */
 public class MultithreadedQueue<T> {
     /** Stores elements */
-    private Queue<T> queue = new ArrayDeque<>();
+    @NotNull private final Queue<T> queue = new ArrayDeque<>();
 
     /** Adds element to the end */
-    public synchronized void add(T element) {
+    public void add(@NotNull T element) {
         queue.add(element);
-        if (queue.size() == 1) {
-            notifyAll();
-        }
+    }
+
+    /** Returns true if Queue is empty */
+    public boolean isEmpty() {
+        return queue.isEmpty();
     }
 
     /** Removes and returns first element */
-    public synchronized T get() throws InterruptedException {
-        while (queue.isEmpty()) {
-            wait();
-        }
+    public T get() throws InterruptedException {
         return queue.poll();
     }
 }

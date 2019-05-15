@@ -72,10 +72,10 @@ class ThreadPoolTest {
 
     @Test
     void testManyThreads() throws LightExecutionException, InterruptedException {
-        var threadPool = new ThreadPool(10000);
+        var threadPool = new ThreadPool(1000);
         var tasks = new ArrayList<LightFuture<Double>>();
 
-        for (int i = 0; i < 100000; i++) {
+        for (int i = 0; i < 10000; i++) {
             final int j = i;
             tasks.add(threadPool.submit(() -> timeTakingCalculation(j)));
         }

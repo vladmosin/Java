@@ -7,9 +7,10 @@ import java.util.ArrayList;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+/** Implementation of thread pool */
 public class ThreadPool {
     /** Stores tasks */
-    @NotNull private final MultithreadedQueue<LightFuture<?>> tasks = new MultithreadedQueue<>();
+    @NotNull private final MultithreadedQueue<TaskHolder<?>> tasks = new MultithreadedQueue<>();
 
     /** Stores threads */
     @NotNull private final ArrayList<Thread> threads = new ArrayList<>();
@@ -26,10 +27,19 @@ public class ThreadPool {
     }
 
     /** Stops applying tasks */
-    public void shutdown() {
-        isShutdown = true;
+    public void shutdown() throws InterruptedException {
+        synchronized (tasks) {
+            isShutdown = true;
+            while (!tasks.isEmpty()) {
+                tasks.wait();
+            }
+        }
         for (var thread : threads) {
             thread.interrupt();
+        }
+
+        for (var thread : threads) {
+            thread.join();
         }
     }
 
@@ -39,8 +49,12 @@ public class ThreadPool {
     @NotNull
     public <T> LightFuture<T> submit(@NotNull Supplier<T> task) {
         var lightFuture = new TaskHolder<>(task);
-        if (!isShutdown) {
-            tasks.add(lightFuture);
+
+        synchronized (tasks) {
+            if (!isShutdown) {
+                tasks.add(lightFuture);
+                tasks.notifyAll();
+            }
         }
 
         return lightFuture;
@@ -50,9 +64,25 @@ public class ThreadPool {
     private class TaskTaker implements Runnable {
         @Override
         public void run() {
-            while(!Thread.interrupted()) {
+            while (!Thread.interrupted()) {
                 try {
-                    tasks.get().makeTask();
+                    TaskHolder<?> task = null;
+                    synchronized (ThreadPool.this.tasks) {
+                        while (tasks.isEmpty() && !isShutdown) {
+                            ThreadPool.this.tasks.wait();
+                        }
+
+                        if (!tasks.isEmpty()) {
+                            task = tasks.get();
+                        }
+
+                        if (tasks.isEmpty() && isShutdown) {
+                            ThreadPool.this.tasks.notify();
+                        }
+                    }
+                    if (task != null) {
+                        task.makeTask();
+                    }
                 } catch (InterruptedException ignored) {
                 }
             }
@@ -80,7 +110,7 @@ public class ThreadPool {
 
         /** Returns result of computation */
         @Override
-         synchronized public T get() throws InterruptedException, LightExecutionException {
+        synchronized public T get() throws InterruptedException, LightExecutionException {
             while (!isReady()) {
                 wait();
             }
@@ -93,8 +123,7 @@ public class ThreadPool {
         }
 
         /** Compute task */
-        @Override
-         synchronized public void makeTask() {
+        synchronized private void makeTask() {
             try {
                 if (!isReady) {
                     result = supplier.get();
@@ -102,8 +131,8 @@ public class ThreadPool {
                 }
             } catch (Exception e) {
                 exception = e;
-                isReady = true;
             } finally {
+                isReady = true;
                 notifyAll();
             }
         }
@@ -112,7 +141,7 @@ public class ThreadPool {
         /** Applies given function to result result of current computation */
         @Override
         @NotNull
-        synchronized public <U> LightFuture<U> thenApply(@NotNull Function<T, U> applyingFunction) {
+        synchronized public <U> LightFuture<U> thenApply(@NotNull Function<? super T, U> applyingFunction) {
             var task = new Supplier<U>() {
                 @Override
                 public U get() {
