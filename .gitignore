@@ -8,3 +8,4 @@
 *.properties
 *.exe
 *.meta
+*.kotlin_module
