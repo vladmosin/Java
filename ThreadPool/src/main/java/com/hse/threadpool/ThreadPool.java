@@ -49,15 +49,18 @@ public class ThreadPool {
     @NotNull
     public <T> LightFuture<T> submit(@NotNull Supplier<T> task) {
         var lightFuture = new TaskHolder<>(task);
+        submit(lightFuture);
+        return lightFuture;
+    }
 
+    /** Adds task to queue of tasks */
+    private <T> void submit(@NotNull TaskHolder<T> task) {
         synchronized (tasks) {
             if (!isShutdown) {
-                tasks.add(lightFuture);
+                tasks.add(task);
                 tasks.notifyAll();
             }
         }
-
-        return lightFuture;
     }
 
     /** Implements thread for thread pool */
@@ -94,6 +97,9 @@ public class ThreadPool {
         /** Stores supplier */
         @NotNull private final Supplier<T> supplier;
 
+        /** Stores thenApply tasks */
+        @NotNull private final ArrayList<TaskHolder<?>> nextTasks = new ArrayList<>();
+
         /** Stores result of computation */
         @Nullable private T result;
 
@@ -123,7 +129,7 @@ public class ThreadPool {
         }
 
         /** Compute task */
-        synchronized private void makeTask() {
+        private void makeTask() {
             try {
                 if (!isReady) {
                     result = supplier.get();
@@ -132,8 +138,15 @@ public class ThreadPool {
             } catch (Exception e) {
                 exception = e;
             } finally {
-                isReady = true;
-                notifyAll();
+                synchronized (this) {
+                    isReady = true;
+
+                    for (var nextTask : nextTasks) {
+                        submit(nextTask);
+                    }
+
+                    notifyAll();
+                }
             }
         }
 
@@ -146,16 +159,21 @@ public class ThreadPool {
                 @Override
                 public U get() {
                     try {
-                        while (!isReady()) {
-                            wait();
-                        }
                         return applyingFunction.apply(TaskHolder.this.get());
                     } catch (Exception exception) {
                         throw new RuntimeException("Cannot apply function", exception);
                     }
                 }
             };
-            return ThreadPool.this.submit(task);
+
+            var taskHolder = new TaskHolder<>(task);
+            if (!isReady) {
+                nextTasks.add(taskHolder);
+            } else {
+                submit(taskHolder);
+            }
+
+            return taskHolder;
         }
 
         /** Creates a task with given supplier */
