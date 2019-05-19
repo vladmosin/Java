@@ -1,6 +1,7 @@
 package ru.hse.cannon;
 
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.Color;
 import org.jetbrains.annotations.NotNull;
 
 public class Bang implements GameObject {
@@ -10,12 +11,17 @@ public class Bang implements GameObject {
 
     @Override
     public void draw() {
-        viewer.drawCircle(position, radius);
+        viewer.drawCircle(position, radius, Color.RED);
     }
 
     @Override
     public void update(double time) {
 
+    }
+
+    @Override
+    public boolean isActive() {
+        return true;
     }
 
     public Bang(double radius, DoubleVector2 position, @NotNull Viewer viewer) {

@@ -12,6 +12,7 @@ public class PixelMeterTranslation {
     public PixelMeterTranslation(double width, double height, @NotNull GraphicsContext graphicsContext) {
         this.width = width;
         this.height = height;
+        this.graphicsContext = graphicsContext;
     }
 
     private double getPixelHeight() {

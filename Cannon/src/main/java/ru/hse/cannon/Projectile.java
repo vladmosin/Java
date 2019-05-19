@@ -1,6 +1,9 @@
 package ru.hse.cannon;
 
+import com.intellij.util.io.Compressor;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.Color;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 
@@ -33,10 +36,14 @@ public class Projectile implements GameObject {
     private boolean isActive = true;
     private  Information projectileInformation;
 
+    @NotNull private Target target;
+    @NotNull private Viewer viewer;
+    @NotNull LandScape landScape;
+
 
     @Override
-    public void draw(GraphicsContext graphicsContext) {
-
+    public void draw() {
+        viewer.drawCircle(position, projectileInformation.radius, Color.BLUE);
     }
 
     @Override
@@ -44,22 +51,46 @@ public class Projectile implements GameObject {
         position.updateX(time * velocity.getX());
         position.updateY(time * velocity.getY());
         velocity.updateY(time * accelerationOfGravity);
+
+        if (isNearToTarget() || landScape.isNearToLandScape(position) || !landScape.isInLandScape(position)) {
+            isActive = false;
+        }
     }
 
-    public Projectile(double momentum, double angle, DoubleVector2 position, Type projectileType) {
+    public Projectile(double momentum, double angle, @NotNull DoubleVector2 position, @NotNull Type projectileType,
+                      @NotNull Viewer viewer, @NotNull Target target, @NotNull LandScape landScape) {
         projectileInformation = informationByType.get(projectileType);
         this.position = position;
+        this.viewer = viewer;
+        this.target = target;
+        this.landScape = landScape;
 
         double velocityModule = momentum / projectileInformation.weight;
         velocity = new DoubleVector2(velocityModule * cos(angle), velocityModule * sin(angle));
     }
 
     public Bang explode() {
+        if (isNearToTarget()) {
+            target.destroy();
+        }
+
         isActive = false;
-        return new Bang(projectileInformation.explodeRadius, new DoubleVector2(position));
+        return new Bang(projectileInformation.explodeRadius, new DoubleVector2(position), viewer);
     }
 
+    @Override
     public boolean isActive() {
         return isActive;
+    }
+
+    private boolean isNearToTarget() {
+        if (projectileInformation.explodeRadius + Target.RADIUS >= position.calculateDistance(target.getPosition())) {
+            System.out.println(projectileInformation.explodeRadius);
+            System.out.println(Target.RADIUS);
+            System.out.println(position.getX() + " " + position.getY());
+            System.out.println(target.getPosition().getX() + " " + target.getPosition().getY());
+            System.out.println(position.calculateDistance(target.getPosition()));
+        }
+        return projectileInformation.explodeRadius + Target.RADIUS >= position.calculateDistance(target.getPosition());
     }
 }

@@ -1,16 +1,18 @@
 package ru.hse.cannon;
 
-import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.Color;
+import org.jetbrains.annotations.NotNull;
 
 public class Target implements GameObject {
-    private static double radius = 3;
+    public static final double RADIUS = 3;
 
-    private DoubleVector2 position;
+    @NotNull private DoubleVector2 position;
     private boolean isAlive = true;
+    @NotNull private Viewer viewer;
 
     @Override
-    public void draw(GraphicsContext graphicsContext) {
-
+    public void draw() {
+        viewer.drawCircle(position, RADIUS, Color.RED);
     }
 
     @Override
@@ -18,10 +20,12 @@ public class Target implements GameObject {
 
     }
 
-    public Target(DoubleVector2 position) {
+    public Target(@NotNull DoubleVector2 position, @NotNull Viewer viewer) {
         this.position = position;
+        this.viewer = viewer;
     }
 
+    @NotNull
     public DoubleVector2 getPosition() {
         return position;
     }
@@ -30,7 +34,7 @@ public class Target implements GameObject {
         isAlive = false;
     }
 
-    public boolean isAlive() {
+    public boolean isActive() {
         return isAlive;
     }
 }

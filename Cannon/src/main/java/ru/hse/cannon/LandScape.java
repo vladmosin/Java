@@ -1,5 +1,6 @@
 package ru.hse.cannon;
 
+import javafx.scene.paint.Color;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -12,13 +13,28 @@ public class LandScape implements GameObject {
     @Override
     public void draw() {
         for (var line : lines) {
-            viewer.drawLine(line);
+            viewer.drawLine(line, Color.GREEN);
         }
+    }
+
+    public boolean isNearToLandScape(@NotNull DoubleVector2 position) {
+        for (var line : lines) {
+            if (line.isNearToLine(position)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Override
     public void update(double time) {
 
+    }
+
+    @Override
+    public boolean isActive() {
+        return true;
     }
 
     public double getYByX(double x) {
@@ -35,5 +51,10 @@ public class LandScape implements GameObject {
         lines.add(new LineHolder(new DoubleVector2(0, 10), new DoubleVector2(25, 30)));
         lines.add(new LineHolder(new DoubleVector2(25, 30), new DoubleVector2(50, 15)));
         this.viewer = viewer;
+    }
+
+    public boolean isInLandScape(@NotNull DoubleVector2 position) {
+        return !(position.getX() < 0 || position.getX() > Viewer.WIDTH
+                || position.getY() < 0 || position.getY() > Viewer.HEIGHT);
     }
 }

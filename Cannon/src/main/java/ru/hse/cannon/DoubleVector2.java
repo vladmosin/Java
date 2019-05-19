@@ -1,5 +1,8 @@
 package ru.hse.cannon;
 
+import org.jetbrains.annotations.NotNull;
+import static java.lang.Math.*;
+
 public class DoubleVector2 {
     private double x;
     private double y;
@@ -28,5 +31,9 @@ public class DoubleVector2 {
 
     public void updateY(double increase) {
         y += increase;
+    }
+
+    public double calculateDistance(@NotNull DoubleVector2 position) {
+        return sqrt(pow(position.x - x, 2) + pow(position.y - y, 2));
     }
 }
