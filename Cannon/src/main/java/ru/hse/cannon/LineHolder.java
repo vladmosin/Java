@@ -3,11 +3,11 @@ package ru.hse.cannon;
 import org.jetbrains.annotations.NotNull;
 
 /** Stores linear function */
-public class Line {
+public class LineHolder {
     @NotNull private DoubleVector2 firstPoint;
     @NotNull private DoubleVector2 secondPoint;
 
-    public Line(@NotNull DoubleVector2 point1, @NotNull DoubleVector2 point2) {
+    public LineHolder(@NotNull DoubleVector2 point1, @NotNull DoubleVector2 point2) {
         if (point1.getX() < point2.getX()) {
             firstPoint = point1;
             secondPoint = point2;
@@ -33,5 +33,13 @@ public class Line {
         double y2 = secondPoint.getY();
 
         return y1 + (x - x1) / (x2 - x1) * (y2 - y1);
+    }
+
+    public DoubleVector2 getFirstPoint() {
+        return firstPoint;
+    }
+
+    public DoubleVector2 getSecondPoint() {
+        return secondPoint;
     }
 }

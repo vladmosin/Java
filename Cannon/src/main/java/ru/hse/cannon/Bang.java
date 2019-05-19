@@ -1,14 +1,16 @@
 package ru.hse.cannon;
 
 import javafx.scene.canvas.GraphicsContext;
+import org.jetbrains.annotations.NotNull;
 
 public class Bang implements GameObject {
     private double radius;
     private DoubleVector2 position;
+    @NotNull private Viewer viewer;
 
     @Override
-    public void draw(GraphicsContext graphicsContext) {
-
+    public void draw() {
+        viewer.drawCircle(position, radius);
     }
 
     @Override
@@ -16,9 +18,10 @@ public class Bang implements GameObject {
 
     }
 
-    public Bang(double radius, DoubleVector2 position) {
+    public Bang(double radius, DoubleVector2 position, @NotNull Viewer viewer) {
         this.radius = radius;
         this.position = position;
+        this.viewer = viewer;
     }
 
     public double getRadius() {
