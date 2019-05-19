@@ -4,7 +4,15 @@
 *.class
 *.lst
 *.txt
-*.jar
-*.properties
 *.exe
 *.meta
+!Cannon/gradle/*
+*.lock
+*.bin
+*.kotlin_module
+BinarySearchTree/target/maven-archiver/pom.properties
+BinarySearchTree/target/BinarySearchTree-1.0-SNAPSHOT.jar
+Cannon/.gradle/4.10/gc.properties
+Cannon/.gradle/buildOutputCleanup/cache.properties
+Cannon/.gradle/vcs-1/gc.properties
+Database/sqlite-jdbc-3.23.1.jar
