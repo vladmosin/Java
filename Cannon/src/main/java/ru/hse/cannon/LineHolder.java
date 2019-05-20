@@ -71,10 +71,10 @@ public class LineHolder {
     public double getAngleOfInclination() {
         double x1 = firstPoint.getX();
         double y1 = firstPoint.getY();
-        double x2 = firstPoint.getX();
-        double y2 = firstPoint.getY();
+        double x2 = secondPoint.getX();
+        double y2 = secondPoint.getY();
 
-        return tan((y2 - y1) / (x2 - x1));
+        return (y2 - y1) / (x2 - x1);
     }
 
     /** Returns coefficient b of line (y = kx + b)*/
