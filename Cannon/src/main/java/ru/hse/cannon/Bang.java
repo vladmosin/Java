@@ -4,9 +4,10 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import org.jetbrains.annotations.NotNull;
 
+/** Implements bang of projectile */
 public class Bang implements GameObject {
     private double radius;
-    private DoubleVector2 position;
+    @NotNull private DoubleVector2 position;
     @NotNull private Viewer viewer;
 
     @Override
@@ -24,16 +25,19 @@ public class Bang implements GameObject {
         return true;
     }
 
-    public Bang(double radius, DoubleVector2 position, @NotNull Viewer viewer) {
+    public Bang(double radius, @NotNull DoubleVector2 position, @NotNull Viewer viewer) {
         this.radius = radius;
         this.position = position;
         this.viewer = viewer;
     }
 
+    /** Returns bang radius */
     public double getRadius() {
         return radius;
     }
 
+    /** Returns bang position */
+    @NotNull
     public DoubleVector2 getPosition() {
         return position;
     }

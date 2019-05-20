@@ -4,16 +4,27 @@ import javafx.scene.paint.Color;
 import org.jetbrains.annotations.NotNull;
 import static java.lang.Math.*;
 
+/** Implementation of cannon for game */
 public class Cannon implements GameObject {
+    /** Shot power */
     private static final double PROJECTILE_MOMENTUM = 100;
+
+    /** Speed of cannon movement */
     private static final double VELOCITY = 10;
+
+    /** Speed of cannon gun rotation */
     private static final double ROTATION = 1;
 
-    private DoubleVector2 position;
-    private double gunAngle = 0;
-    private Projectile.Type projectileType = Projectile.Type.SMALL;
-    private LandScape landScape;
-    private Target target;
+    @NotNull private DoubleVector2 position;
+
+    /** Start angle */
+    private double gunAngle = PI / 2;
+
+    /** Current projectile type */
+    @NotNull private Projectile.Type projectileType = Projectile.Type.SMALL;
+
+    @NotNull private LandScape landScape;
+    @NotNull private Target target;
     @NotNull private Viewer viewer;
 
     public Cannon(double positionX, @NotNull LandScape landScape, @NotNull Viewer viewer, @NotNull Target target) {
@@ -23,16 +34,19 @@ public class Cannon implements GameObject {
         this.target = target;
     }
 
+    /** Creates new projectile */
     @NotNull public Projectile fire() {
         return new Projectile(PROJECTILE_MOMENTUM, gunAngle, new DoubleVector2(position),
                 projectileType, viewer, target, landScape);
     }
 
+    /** Updates angle */
     public void updateAngle(double time) {
         gunAngle += time * ROTATION;
         angleToAppropriateForm();
     }
 
+    /** Changes projectile type */
     public void changeProjectile() {
         if (projectileType == Projectile.Type.SMALL) {
             projectileType = Projectile.Type.BIG;
@@ -41,6 +55,7 @@ public class Cannon implements GameObject {
         }
     }
 
+    /** Angle should be in [0, PI], if not transforms angle to nearest value from [0, PI] */
     private void angleToAppropriateForm() {
         if (gunAngle < 0) {
             gunAngle = 0;
@@ -51,6 +66,7 @@ public class Cannon implements GameObject {
         }
     }
 
+    /** Updates cannon position */
     public void updatePosition(double time) {
         double increase = time * VELOCITY;
         double positionX = position.getX();
@@ -63,6 +79,7 @@ public class Cannon implements GameObject {
         position = new DoubleVector2(positionX, positionY);
     }
 
+    /** Cannon should be in landscape */
     private double positionXToNormalForm(double positionX) {
         if (positionX < 0) {
             positionX = 0;
@@ -82,7 +99,7 @@ public class Cannon implements GameObject {
                         Color.BLACK);
         double lengthOfGun = 2;
         double endOfGunX = lengthOfGun * cos(gunAngle) + position.getX();
-        double endOfGunY = lengthOfGun * sin(gunAngle) + position.getY();
+        double endOfGunY = -lengthOfGun * sin(gunAngle) + position.getY();
 
         viewer.drawLine(new LineHolder(position, new DoubleVector2(endOfGunX, endOfGunY)), Color.BLACK);
     }

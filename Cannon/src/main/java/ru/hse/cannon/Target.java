@@ -7,7 +7,10 @@ import org.jetbrains.annotations.NotNull;
 public class Target implements GameObject {
 
     /** Target radius */
-    public static final double RADIUS = 3;
+    public static final double RADIUS = 2;
+
+    /** Radius for destroying target */
+    public static final double HIT_RADIUS = 1;
 
     /** Position of target */
     @NotNull private DoubleVector2 position;
@@ -21,7 +24,7 @@ public class Target implements GameObject {
     /** Draws a circle */
     @Override
     public void draw() {
-        viewer.drawCircle(position, RADIUS, Color.RED);
+        viewer.drawCircle(position, RADIUS, Color.YELLOW);
     }
 
     @Override
@@ -35,6 +38,7 @@ public class Target implements GameObject {
         this.viewer = viewer;
     }
 
+    /** Returns position */
     @NotNull
     public DoubleVector2 getPosition() {
         return position;
@@ -46,8 +50,12 @@ public class Target implements GameObject {
         isAlive = false;
     }
 
-    /** Returns true if target is active */
     public boolean isActive() {
-        return isAlive;
+        return true;
+    }
+
+    /** Returns true if target was destroyed by projectile */
+    public boolean isDestroyed() {
+        return !isAlive;
     }
 }

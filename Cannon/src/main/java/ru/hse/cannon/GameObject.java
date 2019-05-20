@@ -1,9 +1,12 @@
 package ru.hse.cannon;
 
-import javafx.scene.canvas.GraphicsContext;
-
 public interface GameObject {
+    /** Draws object */
     void draw();
+
+    /** Updates object */
     void update(double time);
+
+    /** Checks that object is alive */
     boolean isActive();
 }

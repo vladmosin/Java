@@ -41,6 +41,7 @@ public class Viewer {
         double pixelRadius = pixelMeterTranslation.XToPixels(radius);
 
         graphicsContext.setStroke(color);
+        graphicsContext.setFill(color);
         graphicsContext.fillOval(pixelCenterX, pixelCenterY, pixelRadius, pixelRadius);
         graphicsContext.strokeOval(pixelCenterX, pixelCenterY, pixelRadius, pixelRadius);
     }

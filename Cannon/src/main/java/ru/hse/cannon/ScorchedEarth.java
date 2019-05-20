@@ -10,7 +10,10 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import org.jetbrains.annotations.NotNull;
 
+/** Implements Scorched Earth game */
 public class ScorchedEarth extends Application {
+
+    /** Stores scene and game controller */
     private static class GameInformation {
         @NotNull private Scene scene;
         @NotNull private GameController gameController;
@@ -21,11 +24,16 @@ public class ScorchedEarth extends Application {
         }
     }
 
+    /** Width in pixels of game */
     private static final double BEST_WIDTH = 800;
+
+    /** Height in pixels of game */
     private static final double BEST_HEIGHT = 640;
 
+    /** Main scene */
     private Scene mainScene;
 
+    /** Starts game */
     @Override
     public void start(@NotNull Stage primaryStage) throws Exception {
         primaryStage.setTitle("Scorched Earth");
@@ -44,6 +52,7 @@ public class ScorchedEarth extends Application {
         gameController.launchGame();
     }
 
+    /** Creates game */
     @NotNull private GameInformation createGame() {
         var gridPane = new GridPane();
         gridPane.setPrefSize(BEST_WIDTH, BEST_HEIGHT);
@@ -59,8 +68,9 @@ public class ScorchedEarth extends Application {
         return new GameInformation(scene, gameController);
     }
 
+    /** Shows end screen */
     public void showScreenWithCongratulations() {
-        var label = new Label("You won!!!");
+        var label = new Label("You win!!!");
         var gridPane = new GridPane();
 
         label.setFont(new Font(40));

@@ -7,6 +7,7 @@ import static java.lang.Math.*;
 public class LineHolder {
     private static double EPSILON = 1;
 
+    /** Two points of line */
     @NotNull private DoubleVector2 firstPoint;
     @NotNull private DoubleVector2 secondPoint;
 
@@ -20,10 +21,12 @@ public class LineHolder {
         }
     }
 
+    /** Checks that x is on line */
     public boolean isXOnLine(double x) {
         return x >= firstPoint.getX() && x <= secondPoint.getX();
     }
 
+    /** Returns y by x with checking domain */
     public double getYByX(double x) {
         if (!isXOnLine(x)) {
             throw new IllegalArgumentException("Given x is not on line");
@@ -32,6 +35,7 @@ public class LineHolder {
         return getYByXWithoutCheckingDomain(x);
     }
 
+    /** Returns y by x */
     private double getYByXWithoutCheckingDomain(double x) {
         double x1 = firstPoint.getX();
         double x2 = secondPoint.getX();
@@ -42,16 +46,19 @@ public class LineHolder {
         return y1 + (x - x1) / (x2 - x1) * (y2 - y1);
     }
 
+    /** Returns point with smaller x */
     @NotNull
     public DoubleVector2 getFirstPoint() {
         return firstPoint;
     }
 
+    /** Returns point with greater x */
     @NotNull
     public DoubleVector2 getSecondPoint() {
         return secondPoint;
     }
 
+    /** Checks that point is near to line */
     public boolean isNearToLine(@NotNull DoubleVector2 position) {
         if (firstPoint.getX() > position.getX() || secondPoint.getX() < position.getX()) {
             return false;
@@ -60,7 +67,8 @@ public class LineHolder {
         return calculateDistanceToPoint(position) < EPSILON;
     }
 
-    private double getAngleOfInclination() {
+    /** Returns coefficient k of line (y = kx + b)*/
+    public double getAngleOfInclination() {
         double x1 = firstPoint.getX();
         double y1 = firstPoint.getY();
         double x2 = firstPoint.getX();
@@ -69,11 +77,13 @@ public class LineHolder {
         return tan((y2 - y1) / (x2 - x1));
     }
 
-    private double getFreeCoefficient() {
+    /** Returns coefficient b of line (y = kx + b)*/
+    public double getFreeCoefficient() {
         return getYByXWithoutCheckingDomain(0);
     }
 
-    private double calculateDistanceToPoint(@NotNull DoubleVector2 position) {
+    /** Returns distance from line to point */
+    public double calculateDistanceToPoint(@NotNull DoubleVector2 position) {
         double k = getAngleOfInclination();
         double b = getFreeCoefficient();
 
