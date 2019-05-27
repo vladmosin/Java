@@ -35,14 +35,14 @@ public class TestLauncher {
             currentLoadedClass = loadedClass;
             pool = Executors.newWorkStealingPool(numberOfThreads);
             fillMethodLists(loadedClass);
-            stringBuilder.append(runTests(loadedClass));
+            stringBuilder.append(runTests());
             clearMethodLists();
         }
 
         return stringBuilder.toString();
     }
 
-    private String runTests(@NotNull Class<?> loadedClass) throws InterruptedException, ExecutionException {
+    private String runTests() throws InterruptedException, ExecutionException {
         var tasks = createTasks();
         var resultList = pool.invokeAll(tasks);
         var resultOfTestClass = new ClassTestingResult();
@@ -108,7 +108,6 @@ public class TestLauncher {
                         0,"Ignored: " + testAnnotation.ignore());
             }
 
-            long threadId = Thread.currentThread().getId();
             var object = createObject();
             long startTime = System.currentTimeMillis();
             for (var method : before) {
