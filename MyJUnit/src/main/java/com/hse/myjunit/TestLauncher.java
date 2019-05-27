@@ -131,7 +131,7 @@ public class TestLauncher {
                 return new TestingResult(testingMethod, TestingResult.ResultType.FAILED, 0,
                         "Failed method invocation");
             } catch (InvocationTargetException e) {
-                if (e.getClass() != testAnnotation.expected()) {
+                if (e.getTargetException().getClass() != testAnnotation.expected()) {
                     return new TestingResult(testingMethod, TestingResult.ResultType.FAILED,
                             System.currentTimeMillis() - startTime,
                             "Exception " + e.getClass().getName() + " was thrown instead of "
@@ -229,8 +229,8 @@ public class TestLauncher {
 
         @Override
         public String toString() {
-            return "PASSED: " + passed + " FAILED: " + ignored +
-                   " IGNORED: " + ignored + " TIME: " + timeMillis + "milliseconds\n";
+            return "PASSED: " + passed + " FAILED: " + failed +
+                   " IGNORED: " + ignored + " TIME: " + timeMillis + " milliseconds\n";
         }
     }
 }
