@@ -108,4 +108,18 @@ class Tester {
             }
         }
     }
+
+    @Test
+    public void testClickOnOneButtonStress() throws InterruptedException {
+        for (int i = 0; i < 1000; i++) {
+            var gameState = new PlayGameState();
+            var board = new CheckeredButtonBoard(2, 2);
+            var userProcessor = new UserInputProcessor(gameState, board);
+
+            userProcessor.processClick(0, 0);
+            userProcessor.processClick(0, 0);
+
+            assertEquals(CellType.OPENED, board.getCellType(0, 0));
+        }
+    }
 }
