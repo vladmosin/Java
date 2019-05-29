@@ -1,8 +1,12 @@
 package ru.hsespb.ticktacktoe;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.Collections;
 
+
+@SuppressWarnings("WeakerAccess")
 public class CheckeredButtonBoard {
     private PlayView playView;
 
@@ -10,7 +14,7 @@ public class CheckeredButtonBoard {
     private int width;
     private int openedCells;
 
-    private Cell[][] cells;
+    @NotNull private Cell[][] cells;
 
     public CheckeredButtonBoard(int height, int width) {
         this.height = height;
@@ -25,7 +29,7 @@ public class CheckeredButtonBoard {
         }
     }
 
-    private ArrayList<Integer> generatePermutation() {
+    @NotNull private ArrayList<Integer> generatePermutation() {
         var permutation = new ArrayList<Integer>();
 
         for (int i = 0; i < width * height / 2; i++) {
@@ -37,7 +41,7 @@ public class CheckeredButtonBoard {
         return permutation;
     }
 
-    public CellType getCellType(int x, int y) {
+    @NotNull public CellType getCellType(int x, int y) {
         return cells[x][y].getCellType();
     }
 
@@ -83,7 +87,7 @@ public class CheckeredButtonBoard {
         return openedCells == height * width;
     }
 
-    public void setPlayView(PlayView playView) {
+    public void setPlayView(@NotNull PlayView playView) {
         this.playView = playView;
     }
 }

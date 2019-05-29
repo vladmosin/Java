@@ -3,7 +3,7 @@ package ru.hsespb.ticktacktoe;
 import org.jetbrains.annotations.NotNull;
 
 public class InputListener {
-    private UserInputProcessor userInputProcessor;
+    @NotNull private UserInputProcessor userInputProcessor;
     private boolean active;
 
     public void start(@NotNull UserInputProcessor userInputProcessor) {

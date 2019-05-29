@@ -2,6 +2,7 @@ package ru.hsespb.ticktacktoe;
 
 import org.jetbrains.annotations.NotNull;
 
+@SuppressWarnings("WeakerAccess")
 public class Cell {
     @NotNull private CellType cellType;
     private int number;
