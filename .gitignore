@@ -8,3 +8,11 @@
 *.properties
 *.exe
 *.meta
+*.bin
+*.lock
+*.html
+*.css
+*.MF
+*.js
+*.idx
+*.kotlin_module
