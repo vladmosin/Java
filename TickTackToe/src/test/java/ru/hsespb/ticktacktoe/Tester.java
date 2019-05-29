@@ -122,4 +122,16 @@ class Tester {
             assertEquals(CellType.OPENED, board.getCellType(0, 0));
         }
     }
+
+    @Test
+    public void testClickOnOneButtonStressOneBoard() throws InterruptedException {
+        var gameState = new PlayGameState();
+        var board = new CheckeredButtonBoard(2, 2);
+        var userProcessor = new UserInputProcessor(gameState, board);
+
+        for (int i = 0; i < 1000; i++) {
+            userProcessor.processClick(0, 0);
+            assertEquals(CellType.OPENED, board.getCellType(0, 0));
+        }
+    }
 }
