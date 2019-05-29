@@ -6,12 +6,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 
+/** Stores board for game */
 @SuppressWarnings("WeakerAccess")
 public class CheckeredButtonBoard {
+    /** Viewer */
     private PlayView playView;
 
     private int height;
     private int width;
+
+    /** Stores number of opened cells */
     private int openedCells;
 
     @NotNull private Cell[][] cells;
@@ -29,6 +33,7 @@ public class CheckeredButtonBoard {
         }
     }
 
+    /** Generates game (numbers in cells)*/
     @NotNull private ArrayList<Integer> generatePermutation() {
         var permutation = new ArrayList<Integer>();
 
@@ -57,6 +62,7 @@ public class CheckeredButtonBoard {
         return cells[x][y];
     }
 
+    /** Opens cell */
     public void openCell(int x, int y) {
         Cell cell = cells[x][y];
         if (cell.isOpen()) {
@@ -70,6 +76,7 @@ public class CheckeredButtonBoard {
         }
     }
 
+    /** Closes cell */
     public void closeCell(int x, int y) {
         Cell cell = cells[x][y];
         if (!cell.isOpen()) {
@@ -83,6 +90,7 @@ public class CheckeredButtonBoard {
         }
     }
 
+    /** Checks that all cells are opened */
     public boolean isAllOpened() {
         return openedCells == height * width;
     }

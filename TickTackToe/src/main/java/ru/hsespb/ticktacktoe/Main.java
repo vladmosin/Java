@@ -12,7 +12,7 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        /*if (possibleArgs) {
+        if (possibleArgs) {
             primaryStage.setTitle("Match");
             (new PlayGameState()).invokeState(primaryStage, size);
         } else {
@@ -20,12 +20,10 @@ public class Main extends Application {
             var scene = new Scene(new GridPane(), 500, 500);
             primaryStage.setScene(scene);
             primaryStage.show();
-        }*/
-        primaryStage.setTitle("Match");
-        (new PlayGameState()).invokeState(primaryStage, 4);
+        }
     }
     public static void main(String[] args) {
-        /*if (args.length != 1) {
+        if (args.length != 1) {
             possibleArgs = false;
         } else {
             try {
@@ -38,7 +36,7 @@ public class Main extends Application {
             {
                 possibleArgs = false;
             }
-        }*/
+        }
 
         launch(args);
     }

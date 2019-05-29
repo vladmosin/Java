@@ -1,5 +1,6 @@
 package ru.hsespb.ticktacktoe;
 
+/** Stores 2-dimension vector with int coordinates */
 public class Point {
     private int x;
     private int y;

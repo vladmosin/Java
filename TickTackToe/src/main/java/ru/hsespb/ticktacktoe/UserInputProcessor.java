@@ -4,10 +4,14 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 
+
+/** Processes all user movements */
 public class UserInputProcessor {
     private CheckeredButtonBoard board;
     private PlayGameState playGameState;
     private Point lastOpenedCellPosition;
+
+    /** After user does not guess pair two buttons marks as should be closed and closes in next click */
     @NotNull private ArrayList<Point> shouldBeClosed = new ArrayList<>();
 
     public UserInputProcessor(@NotNull PlayGameState playGameState, @NotNull CheckeredButtonBoard board) {
@@ -15,6 +19,7 @@ public class UserInputProcessor {
         this.playGameState = playGameState;
     }
 
+    /** Closes al cells? which are stores in shouldBeClosed*/
     private void closeCells() {
         if (shouldBeClosed.size() > 0) {
             for (var point : shouldBeClosed) {
@@ -24,6 +29,7 @@ public class UserInputProcessor {
         shouldBeClosed.clear();
     }
 
+    /** Processes click on board */
     public void processClick(int x, int y) throws InterruptedException {
         closeCells();
         if (board.getCellType(x, y) != CellType.CLOSED) {
@@ -47,6 +53,7 @@ public class UserInputProcessor {
         }
     }
 
+    /** Checks that game ands */
     public static boolean checkIfWinner(CheckeredButtonBoard board) {
         return board.isAllOpened();
     }

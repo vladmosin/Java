@@ -9,6 +9,7 @@ import javafx.scene.layout.RowConstraints;
 import javafx.stage.Stage;
 import org.jetbrains.annotations.NotNull;
 
+/** Class for showing the game */
 public class PlayView {
     private GridPane gridPane;
     private Stage stage;
@@ -28,6 +29,7 @@ public class PlayView {
         stage.show();
     }
 
+    /** Creates new board */
     public void createBoard(@NotNull InputListener listener) {
         buttons = new Button[height][width];
         gridPane = new GridPane();
@@ -62,10 +64,12 @@ public class PlayView {
         }
     }
 
+    /** Sets text to exact button */
     public void setButtonText(int x, int y, @NotNull String text) {
         buttons[x][y].setText(text);
     }
 
+    /** Shows final result of game */
     public void showResult(String result) {
         var label = new Label(result);
         label.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
