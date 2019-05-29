@@ -2,10 +2,10 @@
 *.xml
 !pom.xml
 *.class
-*.lst
-*.txt
 *.jar
 *.properties
+*.lst
+*.txt
 *.exe
 *.meta
 *.bin
@@ -16,3 +16,6 @@
 *.js
 *.idx
 *.kotlin_module
+
+!TickTackToe/gradle/wrapper/gradle-wrapper.jar
+!TickTackToe/gradle/wrapper/gradle-wrapper.properties
