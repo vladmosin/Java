@@ -18,3 +18,5 @@
 *.kotlin_module
 Cannon/gradlew
 Cannon/gradlew.bat
+TickTackToe/gradlew
+TickTackToe/gradlew.bat

@@ -2,9 +2,12 @@ package ru.hse.ftp;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.RowConstraints;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import org.jetbrains.annotations.NotNull;
 
@@ -64,6 +67,9 @@ public class ClientLogicUI {
             if (directory.split(" ")[0].equals("Directory:")) {
                 path.add(directory.split(" ")[1]);
                 showNewState();
+            } else {
+                path.add(directory.split(" ")[1]);
+                showFile();
             }
         }
     }
@@ -109,10 +115,52 @@ public class ClientLogicUI {
                     e.printStackTrace();
                 }
             });
-            gridPane.add(button, 1, i);
+
+            gridPane.add(button, 0, i);
         }
 
         return gridPane;
+    }
+
+    private void showFile() throws IOException {
+        System.out.println(getPath());
+        System.out.println(client.executeGet(getPath()));
+        var fileContent = getFileContent(client.executeGet(getPath()));
+        var gridPane = new GridPane();
+
+        var row1 = new RowConstraints();
+        var row2 = new RowConstraints();
+
+        row1.setPercentHeight(90.0);
+        row2.setPercentHeight(10.0);
+        gridPane.getRowConstraints().add(row1);
+        gridPane.getRowConstraints().add(row2);
+
+        var column = new ColumnConstraints();
+        column.setPercentWidth(100.0);
+        gridPane.getColumnConstraints().add(column);
+
+        var textField = new TextArea();
+        textField.setText(fileContent);
+        textField.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+
+        var button = new Button();
+        button.setText("...");
+        button.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+        button.setOnAction(event -> {
+            try {
+                changeState("...");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
+        gridPane.add(textField, 0, 0);
+        gridPane.add(button, 0, 1);
+
+        var scene = new Scene(gridPane, 500, 500);
+        stage.setScene(scene);
+        stage.show();
     }
 
     private ArrayList<FileInformation> parseAnswer(@NotNull String answer) {
@@ -133,5 +181,15 @@ public class ClientLogicUI {
         }
 
         return filesInfo;
+    }
+
+    @NotNull
+    private String getFileContent(@NotNull String answer) {
+        int index = 0;
+        while (Character.isDigit(answer.charAt(index))) {
+            index++;
+        }
+
+        return answer.substring(index + 1);
     }
 }
