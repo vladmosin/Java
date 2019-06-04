@@ -8,3 +8,13 @@
 *.properties
 *.exe
 *.meta
+*.bin
+*.lock
+*.html
+*.css
+*.js
+*.idx
+*.MF
+*.kotlin_module
+Cannon/gradlew
+Cannon/gradlew.bat
