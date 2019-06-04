@@ -20,3 +20,5 @@ Cannon/gradlew
 Cannon/gradlew.bat
 TickTackToe/gradlew
 TickTackToe/gradlew.bat
+
+!FTP_UI/gradle/wrapper/*
