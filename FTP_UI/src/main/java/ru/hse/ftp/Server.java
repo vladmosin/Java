@@ -10,6 +10,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+/** Implementation of server */
 @SuppressWarnings("WeakerAccess")
 public class Server {
     public static final int PORT = 10594;
@@ -48,6 +49,7 @@ public class Server {
         }
     }
 
+    /** Tries to close socket after exception */
     private static void tryToCloseSocket(@NotNull Socket socket) {
         try {
             socket.close();
@@ -56,12 +58,14 @@ public class Server {
         }
     }
 
+    /** Checks that request format is correct */
     private static boolean rightFormat(@NotNull String request) {
         var lines = request.split(" ");
 
         return lines.length == 2 && (lines[0].equals("1") || lines[0].equals("2"));
     }
 
+    /** Processes query */
     private static void processQuery(@NotNull String query, @NotNull DataOutputStream out) throws IOException {
         var lines = query.split(" ");
 
@@ -72,6 +76,7 @@ public class Server {
         }
     }
 
+    /** Processes get query */
     private static void answerGet(@NotNull String path, @NotNull DataOutputStream out) throws IOException {
         var file = new File(path);
         if (!file.exists() || !file.isFile()) {
@@ -89,6 +94,7 @@ public class Server {
         }
     }
 
+    /** Processes list query */
     private static void answerList(@NotNull String path, @NotNull DataOutputStream out) throws IOException {
         var directory = new File(path);
         if (!directory.exists() || !directory.isDirectory()) {

@@ -24,8 +24,8 @@ class FTPTest {
     @Test
     void executeList() throws IOException {
         var client = new Client();
-        var result = client.executeList(".");
-        assertEquals("11 .gradle 1 .idea 1 build 1 build.gradle 0 gradle 1 gradlew 0 gradlew.bat 0 MainTest 1 out 1 settings.gradle 0 src 1", result);
+        var result = client.executeList("src");
+        assertEquals("2 main 1 test 1", result);
     }
 
     @Test
@@ -59,8 +59,6 @@ class FTPTest {
         var thread1 = new Thread(() -> {
             try {
                 for (int i = 0; i < 100; i++) {
-
-                    System.out.println("Client 1: " + i);
                     client1.executeList("MainTest");
                 }
             } catch (IOException e) {
@@ -71,7 +69,6 @@ class FTPTest {
         var thread2 = new Thread(() -> {
             try {
                 for (int i = 0; i < 100; i++) {
-                    System.out.println("Client 2: " + i);
                     client2.executeList("MainTest");
                 }
             } catch (IOException e) {

@@ -3,11 +3,9 @@ package ru.hse.ftp;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.RowConstraints;
-import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import org.jetbrains.annotations.NotNull;
 
@@ -15,7 +13,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
+/** Implementation of UI logic for client */
 public class ClientLogicUI {
+
+    /** Stores information about file */
     private static class FileInformation {
         @NotNull private String name;
         private boolean isDirectory;
@@ -34,18 +35,25 @@ public class ClientLogicUI {
         }
     }
 
+    /** Stores names of directories in right order */
     @NotNull private ArrayList<String> path = new ArrayList<>();
+
+    /** Stores client */
     @NotNull private Client client = new Client();
+
+    /** Stores stage */
     @NotNull private Stage stage;
 
     public ClientLogicUI(@NotNull Stage stage) throws IOException {
         this.stage = stage;
     }
 
+    /** Starts showing explorer */
     public void start() throws IOException {
         showNewState();
     }
 
+    /** Returns path from names of directories */
     @NotNull private String getPath() {
         var stringBuilder = new StringBuilder(".");
 
@@ -57,6 +65,7 @@ public class ClientLogicUI {
         return stringBuilder.toString();
     }
 
+    /** Changes state after user click */
     private void changeState(@NotNull String directory) throws IOException {
         if (directory.equals("...")) {
             if (path.size() != 0) {
@@ -74,10 +83,12 @@ public class ClientLogicUI {
         }
     }
 
+    /** Shows files in current directory */
     private void showNewState() throws IOException {
         showNewState(parseAnswer(client.executeList(getPath())));
     }
 
+    /** Shows files in current directory */
     private void showNewState(@NotNull ArrayList<FileInformation> filesInfo) {
         var gridPane = createGridPane(filesInfo);
         var scene = new Scene(gridPane, 500, 500);
@@ -86,6 +97,7 @@ public class ClientLogicUI {
         stage.show();
     }
 
+    /** Creates gridPane with list of files in current directory */
     private GridPane createGridPane(@NotNull ArrayList<FileInformation> filesInfo) {
         var gridPane = new GridPane();
 
@@ -122,9 +134,8 @@ public class ClientLogicUI {
         return gridPane;
     }
 
+    /** Shows file content */
     private void showFile() throws IOException {
-        System.out.println(getPath());
-        System.out.println(client.executeGet(getPath()));
         var fileContent = getFileContent(client.executeGet(getPath()));
         var gridPane = new GridPane();
 
@@ -163,6 +174,7 @@ public class ClientLogicUI {
         stage.show();
     }
 
+    /** Parser answer from client on list query */
     private ArrayList<FileInformation> parseAnswer(@NotNull String answer) {
         var filesInfo = new ArrayList<FileInformation>();
         var lines = answer.split(" ");
@@ -183,6 +195,7 @@ public class ClientLogicUI {
         return filesInfo;
     }
 
+    /** Returns file content from client answer */
     @NotNull
     private String getFileContent(@NotNull String answer) {
         int index = 0;

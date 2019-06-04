@@ -5,29 +5,40 @@ import org.jetbrains.annotations.NotNull;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
 
 import static ru.hse.ftp.Server.PORT;
 
+/** Implementation of client. Possible operations are get file and get list of files */
 @SuppressWarnings("WeakerAccess")
 public class Client {
+    /** Output stream to get server answers */
     private DataOutputStream out;
+
+    /** Input stream to ask server */
     private DataInputStream in;
+
+    /** Size of buffer */
     private static final int BUFFER_SIZE = 1024;
 
-    public Client(@NotNull String host) throws IOException {
+    public Client(@NotNull String host, int port) throws IOException {
         var ip = InetAddress.getByName(host);
-        var socket = new Socket(ip, PORT);
+        var socket = new Socket(ip, port);
 
         in = new DataInputStream(socket.getInputStream());
         out = new DataOutputStream(socket.getOutputStream());
     }
 
     public Client() throws IOException {
-        this("localhost");
+        this("localhost", PORT);
     }
 
+    public Client(int port) throws IOException {
+        this("localhost", port);
+    }
+
+    /** Executes list query
+     * @param path to directory
+     * */
     public String executeList(@NotNull String path) throws IOException {
         out.writeUTF("1 " + path);
         out.flush();
@@ -46,6 +57,9 @@ public class Client {
         return stringBuilder.toString();
     }
 
+    /** Executes get query
+     * @param path path to file
+     * */
     public String executeGet(@NotNull String path) throws IOException {
         out.writeUTF("2 " + path);
         out.flush();
@@ -68,6 +82,7 @@ public class Client {
         return stringBuilder.toString();
     }
 
+    /** Starts client in console */
     private void start() {
         var reader = new BufferedReader(new InputStreamReader(System.in));
 
@@ -95,5 +110,10 @@ public class Client {
                 e.printStackTrace();
             }
         }
+    }
+
+    /** Executes new client */
+    public static void main(String[] args) throws IOException {
+        (new Client()).start();
     }
 }
