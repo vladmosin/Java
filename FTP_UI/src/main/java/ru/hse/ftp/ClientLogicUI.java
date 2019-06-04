@@ -15,6 +15,14 @@ import java.util.ArrayList;
 
 /** Implementation of UI logic for client */
 public class ClientLogicUI {
+    /** Stores names of directories in right order */
+    @NotNull private ArrayList<String> path = new ArrayList<>();
+
+    /** Stores client */
+    @NotNull private Client client = new Client();
+
+    /** Stores stage */
+    @NotNull private Stage stage;
 
     /** Stores information about file */
     private static class FileInformation {
@@ -34,15 +42,6 @@ public class ClientLogicUI {
             }
         }
     }
-
-    /** Stores names of directories in right order */
-    @NotNull private ArrayList<String> path = new ArrayList<>();
-
-    /** Stores client */
-    @NotNull private Client client = new Client();
-
-    /** Stores stage */
-    @NotNull private Stage stage;
 
     public ClientLogicUI(@NotNull Stage stage) throws IOException {
         this.stage = stage;
@@ -67,7 +66,7 @@ public class ClientLogicUI {
 
     /** Changes state after user click */
     private void changeState(@NotNull String directory) throws IOException {
-        if (directory.equals("...")) {
+        if ("...".equals(directory)) {
             if (path.size() != 0) {
                 path.remove(path.size() - 1);
                 showNewState();

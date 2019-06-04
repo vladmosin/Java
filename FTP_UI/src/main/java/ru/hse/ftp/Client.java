@@ -94,7 +94,7 @@ public class Client {
         while (true) {
             try {
                 var request = reader.readLine();
-                if (request.equals("exit")) {
+                if ("exit".equals(request)) {
                     return;
                 } else {
                     var args = request.split(" ");

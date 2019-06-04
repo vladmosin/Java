@@ -7,10 +7,11 @@ import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SuppressWarnings("WeakerAccess")
 class FTPTest {
 
     @BeforeAll
-    static void startServer() throws InterruptedException, IOException {
+    public static void startServer() throws InterruptedException, IOException {
         var javaHome = System.getProperty("java.home");
         var javaBin = javaHome + File.separator + "bin" + File.separator + "java";
         var classpath = System.getProperty("java.class.path");
@@ -22,28 +23,28 @@ class FTPTest {
     }
 
     @Test
-    void executeList() throws IOException {
+    public void executeList() throws IOException {
         var client = new Client();
         var result = client.executeList("src");
         assertEquals("2 main 1 test 1", result);
     }
 
     @Test
-    void testListWithFile() throws IOException {
+    public void testListWithFile() throws IOException {
         var client = new Client();
         var result = client.executeList("MainTest");
         assertEquals("3 file1.txt 0 file2.txt 0 TestDir 1", result);
     }
 
     @Test
-    void testGetWithFile() throws IOException {
+    public void testGetWithFile() throws IOException {
         var client = new Client();
         var result = client.executeGet("MainTest/file1.txt");
         assertEquals("3 122", result);
     }
 
     @Test
-    void testMultiQueries() throws IOException {
+    public void testMultiQueries() throws IOException {
         var client = new Client();
         var result = client.executeGet("MainTest/file1.txt");
         assertEquals("3 122", result);
@@ -52,9 +53,9 @@ class FTPTest {
     }
 
     @Test
-    void testTwoClients() throws IOException, InterruptedException {
-        var client1 = new Client("localhost");
-        var client2 = new Client("localhost");
+    public void testTwoClients() throws IOException, InterruptedException {
+        var client1 = new Client();
+        var client2 = new Client();
 
         var thread1 = new Thread(() -> {
             try {
@@ -84,7 +85,7 @@ class FTPTest {
     }
 
     @Test
-    void testListFile() throws IOException {
+    public void testListFile() throws IOException {
         var client = new Client();
         var result = client.executeList("MainTest/file1.txt");
         assertEquals("-1", result);
